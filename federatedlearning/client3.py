@@ -3,7 +3,7 @@ from popper.util import Settings, Stats
 from popper.tester import Tester
 from popper.core import Clause, Literal
 from popper.util import load_kbpath, format_program
-from popper.loop import decide_outcome
+from popper.loop import decide_outcome, Outcome, calc_score
 import flwr as fl
 import numpy as np
 
@@ -15,14 +15,15 @@ logging.basicConfig(level=logging.DEBUG)
 log = logging.getLogger(__name__)
 
 # 🔹 Load dataset
-kbpath = "trains"
+kbpath = "part1"
 bk_file, ex_file, bias_file = load_kbpath(kbpath)
 
 # 🔹 Initialize ILP settings
 settings = Settings(bias_file, ex_file, bk_file)
 tester = Tester(settings)
-
-
+stats = Stats(log_best_programs=settings.info)
+settings.num_pos, settings.num_neg = len(tester.pos), len(tester.neg)
+best_score = None
 import re
 
 def parse_clause(code: str):
@@ -95,7 +96,7 @@ class FlowerClient(fl.client.NumPyClient):
         if self.encoded_outcome is None:
             log.warning("⚠️ No computed outcome yet, sending empty array.")
             return [np.array([])]
-        return [np.array(self.encoded_outcome)]  # ✅ Send encoded outcome
+        return [np.array(self.encoded_outcome, dtype ="<U100")]  # ✅ Send encoded outcome
 
     def set_parameters(self, parameters):
         """Receive and store the new hypothesis (rules) from the server."""
@@ -105,7 +106,7 @@ class FlowerClient(fl.client.NumPyClient):
             log.debug("🚨 No rules received, skipping update.")
             self.current_rules = []
             return 
-
+        parameters = np.array(parameters, dtype="<U100") 
         received_rules = parameters[0].tolist()
         log.debug(f"🔹 Converted received rules to list: {received_rules}")
 
@@ -135,18 +136,28 @@ class FlowerClient(fl.client.NumPyClient):
 
         # 1️⃣ **Test the Rules**
         log.debug("Testing received rules...")
-        conf_matrix = self.tester.test(self.current_rules)
+        with stats.duration('test'):
+            conf_matrix = self.tester.test(self.current_rules)
         log.debug(f"Test Results (Confusion Matrix): {conf_matrix}")
 
         # 2️⃣ **Generate Constraints**
         log.debug("Generating constraints from errors...")
         outcome = decide_outcome(conf_matrix)
         log.debug(f"Outcome: {outcome}")
-
+        score = calc_score(conf_matrix)
+        stats.register_program(self.current_rules, conf_matrix)
+        # UPDATE BEST PROGRAM
+        best_score = None
+        if best_score == None or score > best_score:
+            best_score = score
+            if outcome == (Outcome.ALL, Outcome.NONE):
+                stats.register_solution(self.current_rules, conf_matrix)
+            stats.register_best_program(self.current_rules, conf_matrix)
         # 3️⃣ **Encode outcome before sending**
+        
         self.encoded_outcome = self.encode_outcome(outcome)
         log.info(f"🔹 Computed Outcome: {outcome} → Encoded: {self.encoded_outcome}")
-
+        
         return [np.array(self.encoded_outcome)], len(self.encoded_outcome), {}
 
 
@@ -156,11 +167,6 @@ class FlowerClient(fl.client.NumPyClient):
 
         try:
             self.set_parameters(parameters)
-            #received_rules = parameters[0].tolist()
-            #log.info(f"📥 Received rules for evaluation: {received_rules}")
-            
-            #self.current_rules = [(Clause.from_string(rule)) for rule in received_rules]
-            #log.info(f"📥 Updated client hypothesis: {self.current_rules}")
         except Exception as e:
             log.error(f"❌ Error processing received rules: {e}")
             self.current_rules = []
@@ -173,7 +179,7 @@ class FlowerClient(fl.client.NumPyClient):
         accuracy = (conf_matrix[0] + conf_matrix[2]) / sum(conf_matrix)
 
         log.info(f"✅ Evaluation results: {conf_matrix}, Accuracy: {accuracy}")
-        return 1 - accuracy, len(conf_matrix), {"accuracy": float(accuracy)}
+        return float(1 - accuracy), len(conf_matrix), {"accuracy": float(accuracy)}
 
 
 

@@ -766,6 +766,8 @@ circle(t740_c4_l1).
 circle(t744_c1_l1).
 circle(t745_c3_l1).
 circle(t745_c3_l3).
+circle(t746_c1_l2).
+circle(t746_c2_l1).
 circle(t747_c4_l2).
 circle(t749_c2_l1).
 circle(t74_c4_l1).
@@ -1507,6 +1509,8 @@ diamond(t740_c1_l1).
 diamond(t741_c2_l1).
 diamond(t742_c2_l1).
 diamond(t742_c2_l2).
+diamond(t746_c3_l1).
+diamond(t746_c3_l2).
 diamond(t748_c1_l1).
 diamond(t74_c3_l2).
 diamond(t752_c1_l1).
@@ -3831,6 +3835,9 @@ has_car(t744,t744_c4).
 has_car(t745,t745_c1).
 has_car(t745,t745_c2).
 has_car(t745,t745_c3).
+has_car(t746,t746_c1).
+has_car(t746,t746_c2).
+has_car(t746,t746_c3).
 has_car(t747,t747_c1).
 has_car(t747,t747_c2).
 has_car(t747,t747_c3).
@@ -7899,7 +7906,13 @@ has_load(t745_c1,t745_c1_l1).
 has_load(t745_c3,t745_c3_l1).
 has_load(t745_c3,t745_c3_l2).
 has_load(t745_c3,t745_c3_l3).
-
+has_load(t746_c1,t746_c1_l1).
+has_load(t746_c1,t746_c1_l2).
+has_load(t746_c2,t746_c2_l1).
+has_load(t746_c2,t746_c2_l2).
+has_load(t746_c2,t746_c2_l3).
+has_load(t746_c3,t746_c3_l1).
+has_load(t746_c3,t746_c3_l2).
 has_load(t747_c1,t747_c1_l1).
 has_load(t747_c2,t747_c2_l1).
 has_load(t747_c4,t747_c4_l1).
@@ -9653,6 +9666,7 @@ hexagon(t744_c3_l2).
 hexagon(t744_c3_l3).
 hexagon(t745_c1_l1).
 hexagon(t745_c3_l2).
+hexagon(t746_c2_l3).
 hexagon(t748_c3_l1).
 hexagon(t749_c1_l1).
 hexagon(t74_c1_l1).
@@ -10258,6 +10272,7 @@ inverted_triangle(t729_c4_l2).
 inverted_triangle(t734_c3_l2).
 inverted_triangle(t734_c4_l1).
 inverted_triangle(t739_c2_l2).
+inverted_triangle(t746_c1_l1).
 inverted_triangle(t747_c2_l1).
 inverted_triangle(t748_c3_l2).
 inverted_triangle(t74_c1_l2).
@@ -11500,6 +11515,8 @@ long(t744_c4).
 long(t745_c1).
 long(t745_c2).
 long(t745_c3).
+long(t746_c1).
+long(t746_c2).
 long(t747_c1).
 long(t747_c2).
 long(t747_c3).
@@ -13114,6 +13131,8 @@ one_load(t742_c2_l2).
 one_load(t744_c1_l1).
 one_load(t744_c3_l2).
 one_load(t745_c3_l1).
+one_load(t746_c1_l2).
+one_load(t746_c3_l2).
 one_load(t747_c1_l1).
 one_load(t748_c3_l2).
 one_load(t749_c1_l1).
@@ -14430,6 +14449,7 @@ rectangle(t739_c1_l1).
 rectangle(t739_c4_l1).
 rectangle(t73_c4_l1).
 rectangle(t744_c3_l1).
+rectangle(t746_c2_l2).
 rectangle(t747_c1_l1).
 rectangle(t747_c4_l1).
 rectangle(t74_c2_l1).
@@ -16375,6 +16395,9 @@ roof_closed(t744_c1).
 roof_closed(t744_c2).
 roof_closed(t744_c3).
 roof_closed(t745_c1).
+roof_closed(t746_c1).
+roof_closed(t746_c2).
+roof_closed(t746_c3).
 roof_closed(t748_c1).
 roof_closed(t748_c2).
 roof_closed(t749_c2).
@@ -17545,6 +17568,7 @@ roof_flat(t741_c2).
 roof_flat(t742_c1).
 roof_flat(t742_c2).
 roof_flat(t744_c3).
+roof_flat(t746_c3).
 roof_flat(t748_c1).
 roof_flat(t750_c1).
 roof_flat(t750_c2).
@@ -18057,6 +18081,8 @@ roof_jagged(t73_c4).
 roof_jagged(t743_c2).
 roof_jagged(t744_c2).
 roof_jagged(t745_c1).
+roof_jagged(t746_c1).
+roof_jagged(t746_c2).
 roof_jagged(t748_c2).
 roof_jagged(t749_c2).
 roof_jagged(t74_c1).
@@ -20635,6 +20661,7 @@ short(t740_c4).
 short(t741_c2).
 short(t742_c2).
 short(t744_c1).
+short(t746_c3).
 short(t748_c1).
 short(t749_c3).
 short(t74_c2).
@@ -22223,6 +22250,7 @@ three_wheels(t73_c4).
 three_wheels(t743_c1).
 three_wheels(t745_c1).
 three_wheels(t745_c3).
+three_wheels(t746_c2).
 three_wheels(t747_c2).
 three_wheels(t747_c3).
 three_wheels(t749_c1).
@@ -23147,6 +23175,7 @@ train(t742).
 train(t743).
 train(t744).
 train(t745).
+train(t746).
 train(t747).
 train(t748).
 train(t749).
@@ -25224,6 +25253,10 @@ two_load(t741_c2_l1).
 two_load(t742_c2_l1).
 two_load(t744_c3_l1).
 two_load(t745_c3_l3).
+two_load(t746_c1_l1).
+two_load(t746_c2_l2).
+two_load(t746_c2_l3).
+two_load(t746_c3_l1).
 two_load(t748_c1_l1).
 two_load(t74_c3_l1).
 two_load(t74_c4_l1).
@@ -27243,6 +27276,8 @@ two_wheels(t744_c2).
 two_wheels(t744_c3).
 two_wheels(t744_c4).
 two_wheels(t745_c2).
+two_wheels(t746_c1).
+two_wheels(t746_c3).
 two_wheels(t747_c1).
 two_wheels(t747_c4).
 two_wheels(t748_c1).
@@ -28288,6 +28323,7 @@ zero_load(t734_c1_l3).
 zero_load(t734_c4_l2).
 zero_load(t739_c1_l1).
 zero_load(t744_c3_l3).
+zero_load(t746_c2_l1).
 zero_load(t747_c4_l2).
 zero_load(t748_c3_l1).
 zero_load(t74_c1_l1).

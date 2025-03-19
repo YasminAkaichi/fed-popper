@@ -138,13 +138,18 @@ class Clause:
         if ':-' in rule_str:
             head_body = rule_str.split(':-')
             head = Literal.from_string(head_body[0].strip()) if head_body[0] else None
-            body = tuple(Literal.from_string(lit.strip()) for lit in head_body[1].split(','))
+            body = tuple(
+                Literal.from_string(lit.strip()) 
+                for lit in head_body[1].split(',') 
+                if '(' in lit  # ✅ Ensure it's a valid literal
+            )
         else:
             # No body literals, only head
-            head = Literal.from_string(rule_str.strip())
+            head = Literal.from_string(rule_str.strip()) if '(' in rule_str else None
             body = tuple()  # Empty body
 
         return (head, body)
+
 
     @staticmethod
     def clause_hash(clause):

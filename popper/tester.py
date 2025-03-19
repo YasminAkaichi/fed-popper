@@ -8,6 +8,8 @@ from contextlib import contextmanager
 from . core import Clause, Literal
 from datetime import datetime
 import logging
+
+from logging import DEBUG
 # 🔹 Logging Setup
 logging.basicConfig(level=logging.DEBUG)
 
@@ -24,21 +26,30 @@ class Tester():
         self.seen_prog = {}
         self.current_program = None  # ✅ Store the current rules (hypothesis)
         self.encoded_outcome = None  # ✅ Store the last computed outcome
-        bk_pl_path = self.settings.bk_file
-        exs_pl_path = self.settings.ex_file
+        bk_pl_path = self.settings.bk_file if self.settings.bk_file else None
+        exs_pl_path = self.settings.ex_file if self.settings.ex_file else None
         test_pl_path = pkg_resources.resource_filename(__name__, "lp/test.pl")
+        
 
-        for x in [exs_pl_path, bk_pl_path, test_pl_path]:
+        # List of files to consult in Prolog, skipping None or empty files
+        files_to_consult = [test_pl_path]  # Always consult test.pl
+        if bk_pl_path:  
+            files_to_consult.append(bk_pl_path)  # Add bk.pl only if it exists
+        if exs_pl_path:
+            files_to_consult.append(exs_pl_path)  # Add exs.pl only if it exists
+
+        for x in files_to_consult:
             if os.name == 'nt': # if on Windows, SWI requires escaped directory separators
                 x = x.replace('\\', '\\\\')
             self.prolog.consult(x)
 
-        # load examples
-        list(self.prolog.query('load_examples'))
-
-        self.pos = [x['I'] for x in self.prolog.query('current_predicate(pos_index/2),pos_index(I,_)')]
-        self.neg = [x['I'] for x in self.prolog.query('current_predicate(neg_index/2),neg_index(I,_)')]
-
+        if exs_pl_path:
+            list(self.prolog.query('load_examples'))
+            self.pos = [x['I'] for x in self.prolog.query('current_predicate(pos_index/2),pos_index(I,_)')]
+            self.neg = [x['I'] for x in self.prolog.query('current_predicate(neg_index/2),neg_index(I,_)')]
+        else:
+            self.pos = []
+            self.neg = []
         self.prolog.assertz(f'timeout({self.eval_timeout})')
 
     def first_result(self, q):
@@ -97,6 +108,7 @@ class Tester():
         if all(Clause.is_separable(rule) for rule in rules):
             covered = set()
             for rule in rules:
+                log.debug(f"🔹 Testing rule: {Clause.to_code(rule)}")
                 covered.update(self.success_set([rule]))
         else:
             covered = self.success_set(rules)

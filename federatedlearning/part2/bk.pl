@@ -357,7 +357,6 @@ circle(t414_c2_l1).
 circle(t416_c1_l3).
 circle(t416_c3_l2).
 circle(t418_c1_l2).
-circle(t419_c3_l1).
 circle(t41_c2_l1).
 circle(t41_c4_l1).
 circle(t420_c2_l2).
@@ -607,7 +606,6 @@ circle(t618_c3_l3).
 circle(t618_c4_l1).
 circle(t621_c1_l2).
 circle(t622_c2_l1).
-circle(t623_c3_l1).
 circle(t625_c1_l2).
 circle(t625_c3_l1).
 circle(t625_c4_l1).
@@ -766,6 +764,8 @@ circle(t740_c4_l1).
 circle(t744_c1_l1).
 circle(t745_c3_l1).
 circle(t745_c3_l3).
+circle(t746_c1_l2).
+circle(t746_c2_l1).
 circle(t747_c4_l2).
 circle(t749_c2_l1).
 circle(t74_c4_l1).
@@ -835,7 +835,6 @@ circle(t799_c4_l2).
 circle(t7_c1_l1).
 circle(t7_c1_l2).
 circle(t7_c3_l1).
-circle(t800_c2_l1).
 circle(t801_c2_l1).
 circle(t802_c1_l1).
 circle(t802_c1_l2).
@@ -1072,8 +1071,6 @@ circle(t987_c1_l1).
 circle(t987_c4_l1).
 circle(t987_c4_l2).
 circle(t987_c4_l3).
-circle(t988_c1_l1).
-circle(t988_c2_l2).
 circle(t989_c2_l2).
 circle(t98_c1_l1).
 circle(t98_c3_l2).
@@ -1310,7 +1307,6 @@ diamond(t415_c2_l1).
 diamond(t417_c1_l2).
 diamond(t418_c1_l1).
 diamond(t418_c2_l1).
-diamond(t419_c2_l2).
 diamond(t420_c3_l1).
 diamond(t420_c4_l1).
 diamond(t420_c4_l2).
@@ -1432,9 +1428,6 @@ diamond(t617_c2_l1).
 diamond(t61_c1_l1).
 diamond(t61_c3_l2).
 diamond(t622_c2_l2).
-diamond(t623_c2_l1).
-diamond(t623_c2_l2).
-diamond(t624_c3_l1).
 diamond(t625_c2_l2).
 diamond(t62_c1_l1).
 diamond(t632_c2_l1).
@@ -1507,6 +1500,8 @@ diamond(t740_c1_l1).
 diamond(t741_c2_l1).
 diamond(t742_c2_l1).
 diamond(t742_c2_l2).
+diamond(t746_c3_l1).
+diamond(t746_c3_l2).
 diamond(t748_c1_l1).
 diamond(t74_c3_l2).
 diamond(t752_c1_l1).
@@ -1541,7 +1536,6 @@ diamond(t796_c3_l1).
 diamond(t796_c3_l2).
 diamond(t79_c1_l1).
 diamond(t79_c1_l2).
-diamond(t800_c4_l2).
 diamond(t801_c3_l1).
 diamond(t804_c2_l2).
 diamond(t805_c2_l1).
@@ -2751,10 +2745,7 @@ has_car(t417,t417_c1).
 has_car(t417,t417_c2).
 has_car(t418,t418_c1).
 has_car(t418,t418_c2).
-has_car(t419,t419_c1).
-has_car(t419,t419_c2).
-has_car(t419,t419_c3).
-has_car(t419,t419_c4).
+
 has_car(t42,t42_c1).
 has_car(t42,t42_c2).
 has_car(t42,t42_c3).
@@ -3429,13 +3420,6 @@ has_car(t621,t621_c3).
 has_car(t622,t622_c1).
 has_car(t622,t622_c2).
 has_car(t622,t622_c3).
-has_car(t623,t623_c1).
-has_car(t623,t623_c2).
-has_car(t623,t623_c3).
-has_car(t623,t623_c4).
-has_car(t624,t624_c1).
-has_car(t624,t624_c2).
-has_car(t624,t624_c3).
 has_car(t625,t625_c1).
 has_car(t625,t625_c2).
 has_car(t625,t625_c3).
@@ -3831,6 +3815,9 @@ has_car(t744,t744_c4).
 has_car(t745,t745_c1).
 has_car(t745,t745_c2).
 has_car(t745,t745_c3).
+has_car(t746,t746_c1).
+has_car(t746,t746_c2).
+has_car(t746,t746_c3).
 has_car(t747,t747_c1).
 has_car(t747,t747_c2).
 has_car(t747,t747_c3).
@@ -4015,10 +4002,6 @@ has_car(t8,t8_c4).
 has_car(t80,t80_c1).
 has_car(t80,t80_c2).
 has_car(t80,t80_c3).
-has_car(t800,t800_c1).
-has_car(t800,t800_c2).
-has_car(t800,t800_c3).
-has_car(t800,t800_c4).
 has_car(t801,t801_c1).
 has_car(t801,t801_c2).
 has_car(t801,t801_c3).
@@ -4651,10 +4634,6 @@ has_car(t987,t987_c1).
 has_car(t987,t987_c2).
 has_car(t987,t987_c3).
 has_car(t987,t987_c4).
-has_car(t988,t988_c1).
-has_car(t988,t988_c2).
-has_car(t988,t988_c3).
-has_car(t988,t988_c4).
 has_car(t989,t989_c1).
 has_car(t989,t989_c2).
 has_car(t989,t989_c3).
@@ -6302,10 +6281,7 @@ has_load(t417_c2,t417_c2_l1).
 has_load(t418_c1,t418_c1_l1).
 has_load(t418_c1,t418_c1_l2).
 has_load(t418_c2,t418_c2_l1).
-has_load(t419_c1,t419_c1_l1).
-has_load(t419_c2,t419_c2_l1).
-has_load(t419_c2,t419_c2_l2).
-has_load(t419_c3,t419_c3_l1).
+
 has_load(t41_c2,t41_c2_l1).
 has_load(t41_c3,t41_c3_l1).
 has_load(t41_c4,t41_c4_l1).
@@ -7302,13 +7278,6 @@ has_load(t621_c2,t621_c2_l1).
 has_load(t621_c2,t621_c2_l2).
 has_load(t622_c2,t622_c2_l1).
 has_load(t622_c2,t622_c2_l2).
-has_load(t623_c2,t623_c2_l1).
-has_load(t623_c2,t623_c2_l2).
-has_load(t623_c3,t623_c3_l1).
-has_load(t623_c4,t623_c4_l1).
-has_load(t624_c1,t624_c1_l1).
-has_load(t624_c2,t624_c2_l1).
-has_load(t624_c3,t624_c3_l1).
 has_load(t625_c1,t625_c1_l1).
 has_load(t625_c1,t625_c1_l2).
 has_load(t625_c2,t625_c2_l1).
@@ -7899,7 +7868,13 @@ has_load(t745_c1,t745_c1_l1).
 has_load(t745_c3,t745_c3_l1).
 has_load(t745_c3,t745_c3_l2).
 has_load(t745_c3,t745_c3_l3).
-
+has_load(t746_c1,t746_c1_l1).
+has_load(t746_c1,t746_c1_l2).
+has_load(t746_c2,t746_c2_l1).
+has_load(t746_c2,t746_c2_l2).
+has_load(t746_c2,t746_c2_l3).
+has_load(t746_c3,t746_c3_l1).
+has_load(t746_c3,t746_c3_l2).
 has_load(t747_c1,t747_c1_l1).
 has_load(t747_c2,t747_c2_l1).
 has_load(t747_c4,t747_c4_l1).
@@ -8166,9 +8141,6 @@ has_load(t7_c1,t7_c1_l1).
 has_load(t7_c1,t7_c1_l2).
 has_load(t7_c2,t7_c2_l1).
 has_load(t7_c3,t7_c3_l1).
-has_load(t800_c2,t800_c2_l1).
-has_load(t800_c4,t800_c4_l1).
-has_load(t800_c4,t800_c4_l2).
 has_load(t801_c1,t801_c1_l1).
 has_load(t801_c2,t801_c2_l1).
 has_load(t801_c2,t801_c2_l2).
@@ -9168,10 +9140,7 @@ has_load(t987_c3,t987_c3_l2).
 has_load(t987_c4,t987_c4_l1).
 has_load(t987_c4,t987_c4_l2).
 has_load(t987_c4,t987_c4_l3).
-has_load(t988_c1,t988_c1_l1).
-has_load(t988_c2,t988_c2_l1).
-has_load(t988_c2,t988_c2_l2).
-has_load(t988_c3,t988_c3_l1).
+
 has_load(t989_c1,t989_c1_l1).
 has_load(t989_c2,t989_c2_l1).
 has_load(t989_c2,t989_c2_l2).
@@ -9653,6 +9622,7 @@ hexagon(t744_c3_l2).
 hexagon(t744_c3_l3).
 hexagon(t745_c1_l1).
 hexagon(t745_c3_l2).
+hexagon(t746_c2_l3).
 hexagon(t748_c3_l1).
 hexagon(t749_c1_l1).
 hexagon(t74_c1_l1).
@@ -9835,7 +9805,6 @@ hexagon(t981_c1_l2).
 hexagon(t983_c1_l1).
 hexagon(t983_c4_l2).
 hexagon(t984_c1_l1).
-hexagon(t988_c2_l1).
 hexagon(t994_c2_l2).
 hexagon(t994_c2_l3).
 hexagon(t998_c1_l2).
@@ -10187,8 +10156,6 @@ inverted_triangle(t618_c3_l2).
 inverted_triangle(t619_c3_l1).
 inverted_triangle(t620_c2_l2).
 inverted_triangle(t621_c2_l2).
-inverted_triangle(t623_c4_l1).
-inverted_triangle(t624_c2_l1).
 inverted_triangle(t629_c3_l1).
 inverted_triangle(t630_c2_l1).
 inverted_triangle(t631_c3_l1).
@@ -10258,6 +10225,7 @@ inverted_triangle(t729_c4_l2).
 inverted_triangle(t734_c3_l2).
 inverted_triangle(t734_c4_l1).
 inverted_triangle(t739_c2_l2).
+inverted_triangle(t746_c1_l1).
 inverted_triangle(t747_c2_l1).
 inverted_triangle(t748_c3_l2).
 inverted_triangle(t74_c1_l2).
@@ -10955,7 +10923,6 @@ long(t413_c3).
 long(t415_c3).
 long(t416_c1).
 long(t416_c2).
-long(t419_c4).
 long(t41_c1).
 long(t41_c3).
 long(t41_c4).
@@ -11294,9 +11261,6 @@ long(t621_c2).
 long(t621_c3).
 long(t622_c1).
 long(t622_c3).
-long(t623_c1).
-long(t623_c4).
-long(t624_c2).
 long(t626_c1).
 long(t626_c2).
 long(t626_c3).
@@ -11500,6 +11464,8 @@ long(t744_c4).
 long(t745_c1).
 long(t745_c2).
 long(t745_c3).
+long(t746_c1).
+long(t746_c2).
 long(t747_c1).
 long(t747_c2).
 long(t747_c3).
@@ -11588,9 +11554,7 @@ long(t799_c1).
 long(t799_c2).
 long(t79_c2).
 long(t79_c3).
-long(t800_c1).
-long(t800_c2).
-long(t800_c3).
+
 long(t802_c1).
 long(t803_c1).
 long(t804_c1).
@@ -11903,8 +11867,6 @@ long(t985_c3).
 long(t986_c2).
 long(t987_c3).
 long(t987_c4).
-long(t988_c2).
-long(t988_c4).
 long(t989_c2).
 long(t989_c3).
 long(t989_c4).
@@ -12506,7 +12468,6 @@ one_load(t417_c2_l1).
 one_load(t418_c1_l1).
 one_load(t418_c1_l2).
 one_load(t418_c2_l1).
-one_load(t419_c3_l1).
 one_load(t420_c1_l2).
 one_load(t420_c2_l1).
 one_load(t420_c4_l1).
@@ -12887,9 +12848,6 @@ one_load(t619_c3_l1).
 one_load(t61_c1_l1).
 one_load(t620_c1_l1).
 one_load(t621_c2_l2).
-one_load(t623_c2_l1).
-one_load(t623_c2_l2).
-one_load(t624_c3_l1).
 one_load(t625_c2_l1).
 one_load(t625_c3_l2).
 one_load(t625_c4_l1).
@@ -13114,6 +13072,8 @@ one_load(t742_c2_l2).
 one_load(t744_c1_l1).
 one_load(t744_c3_l2).
 one_load(t745_c3_l1).
+one_load(t746_c1_l2).
+one_load(t746_c3_l2).
 one_load(t747_c1_l1).
 one_load(t748_c3_l2).
 one_load(t749_c1_l1).
@@ -13226,7 +13186,6 @@ one_load(t79_c3_l2).
 one_load(t7_c1_l1).
 one_load(t7_c2_l1).
 one_load(t7_c3_l1).
-one_load(t800_c4_l1).
 one_load(t801_c3_l1).
 one_load(t802_c2_l1).
 one_load(t802_c3_l1).
@@ -13636,7 +13595,6 @@ one_load(t986_c1_l1).
 one_load(t986_c3_l2).
 one_load(t987_c2_l1).
 one_load(t987_c4_l3).
-one_load(t988_c1_l1).
 one_load(t989_c2_l3).
 one_load(t989_c3_l1).
 one_load(t98_c4_l1).
@@ -14063,7 +14021,6 @@ rectangle(t413_c3_l2).
 rectangle(t415_c1_l1).
 rectangle(t416_c3_l1).
 rectangle(t417_c2_l1).
-rectangle(t419_c1_l1).
 rectangle(t41_c4_l2).
 rectangle(t420_c1_l1).
 rectangle(t421_c1_l1).
@@ -14286,7 +14243,6 @@ rectangle(t61_c3_l1).
 rectangle(t620_c2_l1).
 rectangle(t621_c1_l1).
 rectangle(t621_c2_l1).
-rectangle(t624_c1_l1).
 rectangle(t625_c3_l2).
 rectangle(t626_c3_l1).
 rectangle(t627_c1_l1).
@@ -14430,6 +14386,7 @@ rectangle(t739_c1_l1).
 rectangle(t739_c4_l1).
 rectangle(t73_c4_l1).
 rectangle(t744_c3_l1).
+rectangle(t746_c2_l2).
 rectangle(t747_c1_l1).
 rectangle(t747_c4_l1).
 rectangle(t74_c2_l1).
@@ -14866,7 +14823,6 @@ roof_arc(t39_c4).
 roof_arc(t413_c1).
 roof_arc(t414_c2).
 roof_arc(t418_c1).
-roof_arc(t419_c1).
 roof_arc(t420_c4).
 roof_arc(t421_c1).
 roof_arc(t422_c2).
@@ -15008,7 +14964,6 @@ roof_arc(t78_c1).
 roof_arc(t793_c1).
 roof_arc(t793_c3).
 roof_arc(t79_c1).
-roof_arc(t800_c4).
 roof_arc(t802_c3).
 roof_arc(t803_c3).
 roof_arc(t806_c1).
@@ -15728,8 +15683,6 @@ roof_closed(t416_c3).
 roof_closed(t417_c1).
 roof_closed(t417_c2).
 roof_closed(t418_c1).
-roof_closed(t419_c1).
-roof_closed(t419_c2).
 roof_closed(t41_c2).
 roof_closed(t41_c3).
 roof_closed(t420_c1).
@@ -16133,10 +16086,6 @@ roof_closed(t61_c3).
 roof_closed(t621_c1).
 roof_closed(t621_c2).
 roof_closed(t622_c3).
-roof_closed(t623_c2).
-roof_closed(t623_c3).
-roof_closed(t624_c2).
-roof_closed(t624_c3).
 roof_closed(t625_c3).
 roof_closed(t625_c4).
 roof_closed(t626_c1).
@@ -16375,6 +16324,9 @@ roof_closed(t744_c1).
 roof_closed(t744_c2).
 roof_closed(t744_c3).
 roof_closed(t745_c1).
+roof_closed(t746_c1).
+roof_closed(t746_c2).
+roof_closed(t746_c3).
 roof_closed(t748_c1).
 roof_closed(t748_c2).
 roof_closed(t749_c2).
@@ -16489,8 +16441,7 @@ roof_closed(t799_c3).
 roof_closed(t799_c4).
 roof_closed(t79_c1).
 roof_closed(t79_c2).
-roof_closed(t800_c2).
-roof_closed(t800_c4).
+
 roof_closed(t801_c1).
 roof_closed(t801_c2).
 roof_closed(t802_c1).
@@ -16872,8 +16823,6 @@ roof_closed(t986_c4).
 roof_closed(t987_c2).
 roof_closed(t987_c3).
 roof_closed(t987_c4).
-roof_closed(t988_c2).
-roof_closed(t988_c3).
 roof_closed(t989_c1).
 roof_closed(t989_c4).
 roof_closed(t98_c1).
@@ -17227,7 +17176,6 @@ roof_flat(t415_c2).
 roof_flat(t416_c3).
 roof_flat(t417_c1).
 roof_flat(t417_c2).
-roof_flat(t419_c2).
 roof_flat(t420_c1).
 roof_flat(t421_c2).
 roof_flat(t421_c4).
@@ -17425,9 +17373,6 @@ roof_flat(t619_c4).
 roof_flat(t61_c1).
 roof_flat(t61_c3).
 roof_flat(t621_c1).
-roof_flat(t623_c2).
-roof_flat(t623_c3).
-roof_flat(t624_c3).
 roof_flat(t625_c4).
 roof_flat(t627_c1).
 roof_flat(t627_c2).
@@ -17545,6 +17490,7 @@ roof_flat(t741_c2).
 roof_flat(t742_c1).
 roof_flat(t742_c2).
 roof_flat(t744_c3).
+roof_flat(t746_c3).
 roof_flat(t748_c1).
 roof_flat(t750_c1).
 roof_flat(t750_c2).
@@ -17776,7 +17722,6 @@ roof_flat(t985_c1).
 roof_flat(t985_c3).
 roof_flat(t986_c1).
 roof_flat(t987_c2).
-roof_flat(t988_c3).
 roof_flat(t989_c4).
 roof_flat(t98_c2).
 roof_flat(t98_c3).
@@ -18005,7 +17950,6 @@ roof_jagged(t618_c3).
 roof_jagged(t619_c3).
 roof_jagged(t621_c2).
 roof_jagged(t622_c3).
-roof_jagged(t624_c2).
 roof_jagged(t626_c1).
 roof_jagged(t630_c2).
 roof_jagged(t632_c3).
@@ -18057,6 +18001,8 @@ roof_jagged(t73_c4).
 roof_jagged(t743_c2).
 roof_jagged(t744_c2).
 roof_jagged(t745_c1).
+roof_jagged(t746_c1).
+roof_jagged(t746_c2).
 roof_jagged(t748_c2).
 roof_jagged(t749_c2).
 roof_jagged(t74_c1).
@@ -18087,7 +18033,6 @@ roof_jagged(t795_c2).
 roof_jagged(t795_c4).
 roof_jagged(t797_c2).
 roof_jagged(t799_c1).
-roof_jagged(t800_c2).
 roof_jagged(t808_c1).
 roof_jagged(t812_c1).
 roof_jagged(t817_c2).
@@ -18164,7 +18109,6 @@ roof_jagged(t980_c2).
 roof_jagged(t983_c4).
 roof_jagged(t987_c3).
 roof_jagged(t987_c4).
-roof_jagged(t988_c2).
 roof_jagged(t98_c4).
 roof_jagged(t994_c2).
 roof_jagged(t995_c2).
@@ -18593,8 +18537,6 @@ roof_open(t415_c3).
 roof_open(t416_c1).
 roof_open(t416_c2).
 roof_open(t418_c2).
-roof_open(t419_c3).
-roof_open(t419_c4).
 roof_open(t41_c1).
 roof_open(t41_c4).
 roof_open(t420_c2).
@@ -18868,9 +18810,6 @@ roof_open(t620_c2).
 roof_open(t621_c3).
 roof_open(t622_c1).
 roof_open(t622_c2).
-roof_open(t623_c1).
-roof_open(t623_c4).
-roof_open(t624_c1).
 roof_open(t625_c1).
 roof_open(t625_c2).
 roof_open(t626_c2).
@@ -19096,8 +19035,6 @@ roof_open(t79_c3).
 roof_open(t7_c1).
 roof_open(t7_c2).
 roof_open(t7_c3).
-roof_open(t800_c1).
-roof_open(t800_c3).
 roof_open(t801_c3).
 roof_open(t804_c1).
 roof_open(t806_c2).
@@ -19349,8 +19286,6 @@ roof_open(t984_c2).
 roof_open(t985_c2).
 roof_open(t986_c2).
 roof_open(t987_c1).
-roof_open(t988_c1).
-roof_open(t988_c4).
 roof_open(t989_c2).
 roof_open(t989_c3).
 roof_open(t990_c1).
@@ -20100,9 +20035,6 @@ short(t417_c1).
 short(t417_c2).
 short(t418_c1).
 short(t418_c2).
-short(t419_c1).
-short(t419_c2).
-short(t419_c3).
 short(t41_c2).
 short(t420_c1).
 short(t420_c3).
@@ -20441,10 +20373,6 @@ short(t61_c1).
 short(t61_c3).
 short(t620_c1).
 short(t622_c2).
-short(t623_c2).
-short(t623_c3).
-short(t624_c1).
-short(t624_c3).
 short(t625_c1).
 short(t625_c2).
 short(t625_c3).
@@ -20635,6 +20563,7 @@ short(t740_c4).
 short(t741_c2).
 short(t742_c2).
 short(t744_c1).
+short(t746_c3).
 short(t748_c1).
 short(t749_c3).
 short(t74_c2).
@@ -20731,7 +20660,6 @@ short(t79_c1).
 short(t7_c1).
 short(t7_c2).
 short(t7_c3).
-short(t800_c4).
 short(t801_c1).
 short(t801_c2).
 short(t801_c3).
@@ -21052,8 +20980,6 @@ short(t986_c3).
 short(t986_c4).
 short(t987_c1).
 short(t987_c2).
-short(t988_c1).
-short(t988_c3).
 short(t989_c1).
 short(t98_c1).
 short(t990_c1).
@@ -21930,7 +21856,6 @@ three_wheels(t411_c1).
 three_wheels(t412_c4).
 three_wheels(t413_c3).
 three_wheels(t416_c2).
-three_wheels(t419_c4).
 three_wheels(t41_c1).
 three_wheels(t41_c3).
 three_wheels(t420_c2).
@@ -22223,6 +22148,7 @@ three_wheels(t73_c4).
 three_wheels(t743_c1).
 three_wheels(t745_c1).
 three_wheels(t745_c3).
+three_wheels(t746_c2).
 three_wheels(t747_c2).
 three_wheels(t747_c3).
 three_wheels(t749_c1).
@@ -22270,7 +22196,6 @@ three_wheels(t797_c3).
 three_wheels(t798_c2).
 three_wheels(t799_c1).
 three_wheels(t79_c3).
-three_wheels(t800_c3).
 three_wheels(t805_c3).
 three_wheels(t807_c1).
 three_wheels(t808_c1).
@@ -22419,7 +22344,6 @@ three_wheels(t982_c1).
 three_wheels(t983_c2).
 three_wheels(t984_c2).
 three_wheels(t987_c4).
-three_wheels(t988_c2).
 three_wheels(t98_c3).
 three_wheels(t991_c3).
 three_wheels(t994_c2).
@@ -22784,7 +22708,6 @@ train(t415).
 train(t416).
 train(t417).
 train(t418).
-train(t419).
 train(t42).
 train(t420).
 train(t421).
@@ -23011,8 +22934,6 @@ train(t62).
 train(t620).
 train(t621).
 train(t622).
-train(t623).
-train(t624).
 train(t625).
 train(t626).
 train(t627).
@@ -23147,6 +23068,7 @@ train(t742).
 train(t743).
 train(t744).
 train(t745).
+train(t746).
 train(t747).
 train(t748).
 train(t749).
@@ -23207,7 +23129,6 @@ train(t798).
 train(t799).
 train(t8).
 train(t80).
-train(t800).
 train(t801).
 train(t802).
 train(t803).
@@ -23414,7 +23335,6 @@ train(t984).
 train(t985).
 train(t986).
 train(t987).
-train(t988).
 train(t989).
 train(t99).
 train(t990).
@@ -23641,7 +23561,6 @@ triangle(t410_c2_l1).
 triangle(t413_c2_l1).
 triangle(t414_c1_l1).
 triangle(t417_c1_l1).
-triangle(t419_c2_l1).
 triangle(t420_c1_l2).
 triangle(t421_c3_l1).
 triangle(t422_c2_l1).
@@ -23885,7 +23804,6 @@ triangle(t795_c3_l1).
 triangle(t798_c1_l1).
 triangle(t798_c1_l2).
 triangle(t799_c4_l1).
-triangle(t800_c4_l1).
 triangle(t801_c1_l1).
 triangle(t802_c3_l1).
 triangle(t804_c2_l1).
@@ -24001,7 +23919,6 @@ triangle(t982_c2_l1).
 triangle(t985_c1_l2).
 triangle(t985_c2_l2).
 triangle(t987_c1_l2).
-triangle(t988_c3_l1).
 triangle(t990_c2_l1).
 triangle(t992_c1_l1).
 triangle(t992_c1_l2).
@@ -24630,9 +24547,6 @@ two_load(t415_c3_l1).
 two_load(t416_c1_l2).
 two_load(t416_c1_l3).
 two_load(t416_c3_l1).
-two_load(t419_c1_l1).
-two_load(t419_c2_l1).
-two_load(t419_c2_l2).
 two_load(t41_c2_l1).
 two_load(t41_c3_l1).
 two_load(t41_c4_l2).
@@ -24992,8 +24906,6 @@ two_load(t61_c3_l1).
 two_load(t61_c3_l2).
 two_load(t622_c2_l1).
 two_load(t622_c2_l2).
-two_load(t623_c3_l1).
-two_load(t624_c1_l1).
 two_load(t625_c1_l1).
 two_load(t625_c1_l2).
 two_load(t625_c2_l2).
@@ -25224,6 +25136,10 @@ two_load(t741_c2_l1).
 two_load(t742_c2_l1).
 two_load(t744_c3_l1).
 two_load(t745_c3_l3).
+two_load(t746_c1_l1).
+two_load(t746_c2_l2).
+two_load(t746_c2_l3).
+two_load(t746_c3_l1).
 two_load(t748_c1_l1).
 two_load(t74_c3_l1).
 two_load(t74_c4_l1).
@@ -25314,7 +25230,6 @@ two_load(t799_c4_l2).
 two_load(t79_c1_l1).
 two_load(t79_c2_l3).
 two_load(t7_c1_l2).
-two_load(t800_c4_l2).
 two_load(t801_c1_l1).
 two_load(t801_c2_l1).
 two_load(t801_c2_l2).
@@ -25645,8 +25560,6 @@ two_load(t986_c4_l1).
 two_load(t986_c4_l2).
 two_load(t987_c1_l1).
 two_load(t987_c1_l2).
-two_load(t988_c2_l2).
-two_load(t988_c3_l1).
 two_load(t989_c1_l1).
 two_load(t98_c1_l1).
 two_load(t990_c1_l1).
@@ -26456,9 +26369,6 @@ two_wheels(t417_c1).
 two_wheels(t417_c2).
 two_wheels(t418_c1).
 two_wheels(t418_c2).
-two_wheels(t419_c1).
-two_wheels(t419_c2).
-two_wheels(t419_c3).
 two_wheels(t41_c2).
 two_wheels(t41_c4).
 two_wheels(t420_c1).
@@ -26952,13 +26862,6 @@ two_wheels(t61_c1).
 two_wheels(t61_c3).
 two_wheels(t620_c1).
 two_wheels(t622_c2).
-two_wheels(t623_c1).
-two_wheels(t623_c2).
-two_wheels(t623_c3).
-two_wheels(t623_c4).
-two_wheels(t624_c1).
-two_wheels(t624_c2).
-two_wheels(t624_c3).
 two_wheels(t625_c1).
 two_wheels(t625_c2).
 two_wheels(t625_c3).
@@ -27243,6 +27146,8 @@ two_wheels(t744_c2).
 two_wheels(t744_c3).
 two_wheels(t744_c4).
 two_wheels(t745_c2).
+two_wheels(t746_c1).
+two_wheels(t746_c3).
 two_wheels(t747_c1).
 two_wheels(t747_c4).
 two_wheels(t748_c1).
@@ -27380,9 +27285,6 @@ two_wheels(t79_c2).
 two_wheels(t7_c1).
 two_wheels(t7_c2).
 two_wheels(t7_c3).
-two_wheels(t800_c1).
-two_wheels(t800_c2).
-two_wheels(t800_c4).
 two_wheels(t801_c1).
 two_wheels(t801_c2).
 two_wheels(t801_c3).
@@ -27867,9 +27769,7 @@ two_wheels(t986_c4).
 two_wheels(t987_c1).
 two_wheels(t987_c2).
 two_wheels(t987_c3).
-two_wheels(t988_c1).
-two_wheels(t988_c3).
-two_wheels(t988_c4).
+
 two_wheels(t989_c1).
 two_wheels(t989_c2).
 two_wheels(t989_c3).
@@ -28225,8 +28125,6 @@ zero_load(t620_c2_l1).
 zero_load(t621_c1_l1).
 zero_load(t621_c1_l3).
 zero_load(t621_c2_l1).
-zero_load(t623_c4_l1).
-zero_load(t624_c2_l1).
 zero_load(t629_c3_l2).
 zero_load(t62_c3_l1).
 zero_load(t630_c2_l3).
@@ -28288,6 +28186,7 @@ zero_load(t734_c1_l3).
 zero_load(t734_c4_l2).
 zero_load(t739_c1_l1).
 zero_load(t744_c3_l3).
+zero_load(t746_c2_l1).
 zero_load(t747_c4_l2).
 zero_load(t748_c3_l1).
 zero_load(t74_c1_l1).
@@ -28321,7 +28220,6 @@ zero_load(t797_c1_l1).
 zero_load(t797_c2_l1).
 zero_load(t797_c3_l1).
 zero_load(t79_c3_l3).
-zero_load(t800_c2_l1).
 zero_load(t802_c1_l1).
 zero_load(t802_c1_l2).
 zero_load(t805_c3_l1).
@@ -28456,7 +28354,6 @@ zero_load(t981_c1_l2).
 zero_load(t983_c4_l2).
 zero_load(t984_c1_l2).
 zero_load(t987_c3_l2).
-zero_load(t988_c2_l1).
 zero_load(t989_c2_l1).
 zero_load(t989_c2_l2).
 zero_load(t989_c4_l1).

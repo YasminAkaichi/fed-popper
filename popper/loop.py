@@ -8,7 +8,8 @@ from . tester import Tester
 from . constrain import Constrain
 from . generate import generate_program
 from . core import Grounding, Clause
-
+logging.basicConfig(level=logging.DEBUG)
+log = logging.getLogger(__name__)
 class Outcome:
     ALL = 'all'
     SOME = 'some'
@@ -66,33 +67,72 @@ def decide_outcome(conf_matrix):
     return (positive_outcome, negative_outcome)
 
 def build_rules(settings, stats, constrainer, tester, program, before, min_clause, outcome):
+
     (positive_outcome, negative_outcome) = outcome
     # RM: If you don't use these two lines you need another three entries in the OUTCOME_TO_CONSTRAINTS table (one for every positive outcome combined with negative outcome ALL).
     if negative_outcome == Outcome.ALL:
          negative_outcome = Outcome.SOME
-
+    for rule in program:
+        log.debug(f"🛠 Checking rule in `build_rules()`: {rule}")
+        head, body = rule
+        log.debug(f" Parsed heard {head}")
+        log.debug(f" Parsed body {body}")
     rules = set()
     for constraint_type in OUTCOME_TO_CONSTRAINTS[(positive_outcome, negative_outcome)]:
         if constraint_type == Con.GENERALISATION:
-            rules.update(constrainer.generalisation_constraint(program, before, min_clause))
+            #new_rules = constrainer.generalisation_constraint(program, before, min_clause)
+            new_rules = list(constrainer.generalisation_constraint([rule], before, min_clause))
+            log.debug(f"✅ New generalized rules after inconsistency: {new_rules}")
+
+            #log.debug(f"🔹 GENERALISATION generated: {new_rules}")
+            rules.update(new_rules)
+            
         elif constraint_type == Con.SPECIALISATION:
-            rules.update(constrainer.specialisation_constraint(program, before, min_clause))
+            new_rules = constrainer.specialisation_constraint(program, before, min_clause)
+            log.debug(f"🔹 SPECIALISATION generated: {new_rules}")
+            rules.update(new_rules)
+            
         elif constraint_type == Con.REDUNDANCY:
-            rules.update(constrainer.redundancy_constraint(program, before, min_clause))
+            new_rules = constrainer.redundancy_constraint(program, before, min_clause)
+            log.debug(f"🔹 REDUNDANCY generated: {new_rules}")
+            rules.update(new_rules)
+            
         elif constraint_type == Con.BANISH:
-            rules.update(constrainer.banish_constraint(program, before, min_clause))
+            new_rules = constrainer.banish_constraint(program, before, min_clause)
+            log.debug(f"🔹 BANISH generated: {new_rules}")
+            rules.update(new_rules)
 
+        # 🔎 Functional Test Constraint
     if settings.functional_test and tester.is_non_functional(program):
-        rules.update(constrainer.generalisation_constraint(program, before, min_clause))
+        new_rules = constrainer.generalisation_constraint(program, before, min_clause)
+        log.debug(f"🔹 FUNCTIONAL TEST generated: {new_rules}")
+        rules.update(new_rules)
 
-    # eliminate generalisations of clauses that contain redundant literals
+    # 🔎 Redundant Literal Constraint
     for rule in tester.check_redundant_literal(program):
-        rules.update(constrainer.redundant_literal_constraint(rule, before, min_clause))
+        new_rules = constrainer.redundant_literal_constraint(rule, before, min_clause)
+        log.debug(f"🔹 REDUNDANT LITERAL generated: {new_rules}")
+        rules.update(new_rules)
 
-    # eliminate generalisations of programs that contain redundant clauses
+    # 🔎 Redundant Clause Constraint
     if tester.check_redundant_clause(program):
-        rules.update(constrainer.generalisation_constraint(program, before, min_clause))
+        new_rules = constrainer.generalisation_constraint(program, before, min_clause)
+        log.debug(f"🔹 REDUNDANT CLAUSE generated: {new_rules}")
+        rules.update(new_rules)
 
+    for rule in program:
+        if Clause.is_separable(rule):
+            log.debug(f"🔎 Checking if rule is inconsistent: {rule}")
+            if tester.is_inconsistent(rule):
+                log.debug(f"🚨 Rule is inconsistent! {rule}")
+                for x in constrainer.generalisation_constraint([rule], before, min_clause):
+                    rules.add(x)
+        
+            log.debug(f"🔎 Checking if rule is totally incomplete: {rule}")
+            if tester.is_totally_incomplete(rule):
+                log.debug(f"🚨 Rule is totally incomplete! {rule}")
+                for x in constrainer.redundancy_constraint([rule], before, min_clause):
+                    rules.add(x)
     if len(program) > 1:
         # evaluate inconsistent sub-clauses
         for rule in program:
@@ -126,9 +166,10 @@ def popper(settings, stats):
     best_score = None
 
     for size in range(1, settings.max_literals + 1):
+        
         stats.update_num_literals(size)
         solver.update_number_of_literals(size)
-
+        log.debug(f"size is:{size}")
         while True:
             # GENERATE HYPOTHESIS
             with stats.duration('generate'):
@@ -136,13 +177,14 @@ def popper(settings, stats):
                 if not model:
                     break
                 (program, before, min_clause) = generate_program(model)
-
+                log.debug(f"before {before}")
+                log.debug(f"min_clause{min_clause}")
             # TEST HYPOTHESIS
             with stats.duration('test'):
                 conf_matrix = tester.test(program)
                 outcome = decide_outcome(conf_matrix)
                 score = calc_score(conf_matrix)
-
+            log.debug(f"🔹 After test: {stats}")
             stats.register_program(program, conf_matrix)
 
             # UPDATE BEST PROGRAM
