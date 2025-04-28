@@ -1,0 +1,13 @@
+person(ann).
+person(mary).
+person(tom).
+person(eve).
+person(lucy).
+parent(ann,mary).
+parent(ann,tom).
+parent(tom,eve).
+parent(tom,lucy).
+female(ann).
+female(mary).
+female(eve).
+female(lucy).

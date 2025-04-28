@@ -16,6 +16,10 @@ If you use Popper, please cite the paper: Andrew Cropper and Rolf Morel. [Learni
 
 [pyswip](https://pypi.org/project/pyswip/)
 
+# Clone https://github.com/YasminAkaichi/flower.git 
+
+Dans Popper, cd flower 
+> pip install -e 
 
 # Command line usage
 

@@ -84,8 +84,8 @@ def parse_settings():
 class Settings:
     def __init__(self,
             bias_file,
-            ex_file = None,
-            bk_file= None,
+            ex_file,
+            bk_file,
             info = False,
             debug = False,
             stats = False,
@@ -99,8 +99,8 @@ class Settings:
             hspace=False):
             
         self.bias_file = bias_file
-        self.ex_file = ex_file if ex_file else ""
-        self.bk_file = bk_file if bk_file else ""
+        self.ex_file = ex_file
+        self.bk_file = bk_file
         self.info = info
         self.debug = debug
         self.stats = stats
@@ -177,11 +177,6 @@ class Stats:
         self.logger.debug(format_program(program))
         self.logger.debug(format_conf_matrix(conf_matrix))
     
-    def register_hypothesis(self, program):
-        self.total_programs +=1
-        self.logger.debug(f'Program {self.total_programs}:')
-        self.logger.debug(format_program(program))
-    
     def register_best_program(self, program, conf_matrix):
         prog_stats = self.make_program_stats(program, conf_matrix)
         self.best_programs.append(prog_stats)
@@ -189,14 +184,6 @@ class Stats:
             self.logger.info(f'% NEW BEST PROG {self.total_programs}:')
             self.logger.info(prog_stats.code)
             self.logger.info(format_conf_matrix(conf_matrix))
-    
-    def register_best_hypothesis(self, program):
-        prog_stats = self.make_hypthesis_stats(program)
-        self.best_programs.append(prog_stats)
-        if self.log_best_programs:
-            self.logger.info(f'% NEW BEST PROG {self.total_programs}:')
-            self.logger.info(prog_stats.code)
-
 
     def log_final_result(self):
         if self.solution:
@@ -214,11 +201,7 @@ class Stats:
     def make_program_stats(self, program, conf_matrix):
         code = format_program(program)
         return ProgramStats(code, conf_matrix, self.total_exec_time(), self.duration_summary())
-    
-    def make_hypothesis_stats(self, program):
-        code = format_program(program)
-        return ProgramStats(code, self.total_exec_time(), self.duration_summary())
-    
+
     def register_solution(self, program, conf_matrix):
         prog_stats = self.make_program_stats(program, conf_matrix)
         self.solution = prog_stats
@@ -297,7 +280,7 @@ class Stage:
 class ProgramStats:
     def __init__(self, code, conf_matrix, total_exec_time, durations):
         self.code = code
-        self.conf_matrix = conf_matrix if conf_matrix else (0, 0, 0, 0)
+        self.conf_matrix = conf_matrix
         self.total_exec_time = total_exec_time
         self.durations = durations
 
