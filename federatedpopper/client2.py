@@ -19,7 +19,7 @@ log = logging.getLogger(__name__)
 
 settings = parse_settings()
 # 🔹 Load dataset
-kbpath = "trains"
+kbpath = "mutagenesis"
 bk_file, ex_file, bias_file = load_kbpath(kbpath)
 #settings = Settings(bias_file, ex_file, bk_file)
 
@@ -124,69 +124,21 @@ class FlowerClient(fl.client.NumPyClient):
             self.current_rules = []  # Reset to empty if parsing fails
 
     def fit(self, parameters, config):
-        """Génère des règles avec POPPER, les stocke et les retourne au serveur."""
         print("🔥 FIT() called!")
-        log.info("🚀 Lancement de POPPER dans fit()...")
-        #self.set_parameters(parameters)
-        # learning 
-        best_score = None
-        for size in range(1, settings.max_literals + 1):
-            
-            self.stats.update_num_literals(size)
-            self.solver.update_number_of_literals(size)
-            while True:
-                # GENERATE HYPOTHESIS
-                with self.stats.duration('generate'):
-                    model = self.solver.get_model() 
-                    if not model:
-                        break
-                    (program, before, min_clause) = generate_program(model)
-                # TEST HYPOTHESIS
-                with self.stats.duration('test'):
-                    conf_matrix = self.tester.test(program)
-                    outcome = decide_outcome(conf_matrix)
-                    score = calc_score(conf_matrix)
-                self.stats.register_program(program, conf_matrix)
+        log.info("🚀 Lancement de POPPER avec learn_solution dans fit()...")
 
-                # UPDATE BEST PROGRAM
-                if best_score == None or score > best_score:
-                    best_score = score
+        program, stats = learn_solution(self.settings)
 
-                    if outcome == (Outcome.ALL, Outcome.NONE):
-                        self.stats.register_solution(program, conf_matrix)
-                        return self.stats.solution.code
-
-                    self.stats.register_best_program(program, conf_matrix)
-                    learned_rules = self.stats.best_program.code if self.stats.best_program else None
-                    
-                # BUILD RULES
-                with self.stats.duration('build'):
-                    rules = build_rules(self.settings, self.stats, self.constrainer, self.tester, program, before, min_clause, outcome)
-
-                # GROUND RULES
-                with self.stats.duration('ground'):
-                    rules = ground_rules(self.stats, self.grounder, self.solver.max_clauses, self.solver.max_vars, rules)
-
-                # UPDATE SOLVER
-                with self.stats.duration('add'):
-                    self.solver.add_ground_clauses(rules)
-
-        self.stats.register_completion()
-        learned_rules = self.stats.best_program.code if self.stats.best_program else None
-
-        log.info(f"learned rules {learned_rules}")
-        if not learned_rules:
-            log.warning("🚨 Aucune règle générée. Envoi d’un tableau vide.")
+        if not program:
+            log.warning("🚨 Aucun programme trouvé, envoi vide.")
             self.current_rules = []
             return [np.array([])], 0, {}
-         
-        rule_strings = learned_rules if isinstance(learned_rules, list) else [learned_rules]
 
-        # 🧠 On utilise set_parameters pour stocker les règles
+        # Sinon, on encode proprement
+        rule_strings = program if isinstance(program, list) else [program]
         rules_array = np.array(rule_strings, dtype="<U1000")
-        self.set_parameters([rules_array])  # 💡 Stocke proprement les règles parsées
+        self.set_parameters([rules_array])
 
-        # 🧼 Et on les récupère via get_parameters
         return self.get_parameters(config), len(self.current_rules), {}
 
 
