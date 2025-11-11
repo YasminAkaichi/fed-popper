@@ -81,105 +81,104 @@ class FlowerClient(fl.client.NumPyClient):
         self.tester = tester  # Tester for ILP evaluation
         self.current_rules = None  # Store current hypothesis
         self.encoded_outcome = None  # Store encoded outcome as (E+, E-)
+        self.best_score = None  # <- track across rounds if you want
 
     def encode_outcome(self, outcome):
-        """Convert ('ALL', 'SOME', 'NONE') to (1,2,3) encoding."""
-        normalized_outcome = (outcome[0].upper(), outcome[1].upper())  # Convert to uppercase
-        return (OUTCOME_ENCODING[normalized_outcome[0]], OUTCOME_ENCODING[normalized_outcome[1]])
+        norm = (outcome[0].upper(), outcome[1].upper())
+        return (OUTCOME_ENCODING[norm[0]], OUTCOME_ENCODING[norm[1]])
 
-    def decode_outcome(self, encoded_outcome):
-        """Convert (1,2,3) encoding back to ('ALL', 'SOME', 'NONE')."""
-        return (OUTCOME_DECODING[encoded_outcome[0]], OUTCOME_DECODING[encoded_outcome[1]])
+    def decode_outcome(self, enc):
+        return (OUTCOME_DECODING[int(enc[0])], OUTCOME_DECODING[int(enc[1])])
 
     def get_parameters(self, config):
-        """Retrieve and send the last computed (E+, E-) outcome to the server."""
+        # Send last computed (E+,E-) (encoded as ints)
         if self.encoded_outcome is None:
             log.warning("⚠️ No computed outcome yet, sending empty array.")
-            return [np.array([])]
-        return [np.array(self.encoded_outcome, dtype ="<U100")]  # ✅ Send encoded outcome
+            return [np.array([], dtype=np.int64)]
+        return [np.array(self.encoded_outcome, dtype=np.int64)]
 
     def set_parameters(self, parameters):
-        """Receive and store the new hypothesis (rules) from the server."""
+        """Receive rules from server and parse to Popper (Clause, Literal)."""
         log.debug(f"📥 Raw received parameters: {parameters}")
 
-        if parameters[0].size == 0:
+        # (1) Pas de paramètres → aucune règle
+        if not parameters or parameters[0].size == 0:
             log.debug("🚨 No rules received, skipping update.")
             self.current_rules = []
-            return 
-        parameters = np.array(parameters, dtype="<U100") 
-        received_rules = parameters[0].tolist()
-        log.debug(f"🔹 Converted received rules to list: {received_rules}")
+            return
+
+        arr = parameters[0]
+
+        # (2) Si ce ne sont PAS des strings → ce ne sont PAS des règles
+        if arr.dtype.kind not in ["U", "S", "O"]: 
+            log.debug("🚨 Received parameters are NOT rules (maybe outcomes). Skipping update.")
+            self.current_rules = []
+            return
 
         try:
-            # ✅ Convert received rules into Clause objects
-            parsed_rules = [transform_rule_to_tester_format(rule) for rule in received_rules]
+            # (3) Convertir les règles (strings)
+            received_rules = arr.tolist()
+            log.debug(f"🔹 Received rules: {received_rules}")
 
-            # 🔹 Remove any None values (failed transformations)
-            self.current_rules = [rule for rule in parsed_rules if rule is not None]
+            # (4) Convertir en structure Popper
+            parsed = [transform_rule_to_tester_format(r) for r in received_rules]
+            self.current_rules = [p for p in parsed if p is not None]
 
-            log.debug(f"✅ Updated client hypothesis: {self.current_rules}")
+            log.debug(f"✅ Parsed hypothesis: {self.current_rules}")
+
         except Exception as e:
             log.error(f"❌ Error processing received rules: {e}")
-            self.current_rules = []  # Reset to empty if parsing fails
+            self.current_rules = []
 
 
 
+
+    
     def fit(self, parameters, config):
-        """Test the received rules, compute outcomes, and send them back."""
-        self.set_parameters(parameters)  # ✅ Update rules before testing
-        log.debug(f"🔹 Current rules: {self.current_rules}")
+        """Test rules locally, compute local outcome (E+,E-), send encoded."""
+        self.set_parameters(parameters)
 
         if not self.current_rules:
-            log.warning("🚨 No rules available! Sending default outcome (NONE, NONE).")
+            log.warning("🚨 No rules available! Sending default outcome (NONE,NONE).")
             self.encoded_outcome = (OUTCOME_ENCODING["NONE"], OUTCOME_ENCODING["NONE"])
-            return [np.array(self.encoded_outcome)], len(self.encoded_outcome), {}
+            num_examples = settings.num_pos + settings.num_neg
+            return [np.array(self.encoded_outcome, dtype=np.int64)], num_examples, {}
 
-        # 1️⃣ **Test the Rules**
-        log.debug("Testing received rules...")
         with stats.duration('test'):
             conf_matrix = self.tester.test(self.current_rules)
-        log.debug(f"Test Results (Confusion Matrix): {conf_matrix}")
+        log.debug(f"Confusion matrix: {conf_matrix}")
 
-        # 2️⃣ **Generate Constraints**
-        log.debug("Generating constraints from errors...")
         outcome = decide_outcome(conf_matrix)
-        log.debug(f"Outcome: {outcome}")
         score = calc_score(conf_matrix)
         stats.register_program(self.current_rules, conf_matrix)
-        # UPDATE BEST PROGRAM
-        best_score = None
-        if best_score == None or score > best_score:
-            best_score = score
+
+        if self.best_score is None or score > self.best_score:
+            self.best_score = score
             if outcome == (Outcome.ALL, Outcome.NONE):
                 stats.register_solution(self.current_rules, conf_matrix)
             stats.register_best_program(self.current_rules, conf_matrix)
-        # 3️⃣ **Encode outcome before sending**
-        
+
+        # Encode and return as ints
         self.encoded_outcome = self.encode_outcome(outcome)
-        log.info(f"🔹 Computed Outcome: {outcome} → Encoded: {self.encoded_outcome}")
-        
-        return [np.array(self.encoded_outcome)], len(self.encoded_outcome), {}
+        num_examples = settings.num_pos + settings.num_neg
+        log.info(f"🔹 Outcome: {outcome} → Encoded: {self.encoded_outcome}")
+        return [np.array(self.encoded_outcome, dtype=np.int64)], num_examples, {}
 
 
     def evaluate(self, parameters, config):
-        """Evaluate the hypothesis and return accuracy."""
-        log.info(f"📥 Received parameters for evaluation: {parameters}")
-
-        try:
-            self.set_parameters(parameters)
-        except Exception as e:
-            log.error(f"❌ Error processing received rules: {e}")
-            self.current_rules = []
-        
+        """Return loss, num_examples, metrics."""
+        self.set_parameters(parameters)
         if not self.current_rules:
-            log.warning("🚨 No rules to evaluate! Skipping evaluation.")
+            log.warning("🚨 No rules to evaluate! Skipping.")
             return 1.0, 0, {"accuracy": 0.0}
 
         conf_matrix = self.tester.test(self.current_rules)
-        accuracy = (conf_matrix[0] + conf_matrix[2]) / sum(conf_matrix)
+        total = sum(conf_matrix) if sum(conf_matrix) > 0 else 1
+        accuracy = (conf_matrix[0] + conf_matrix[2]) / total
+        num_examples = sum(conf_matrix)
 
-        log.info(f"✅ Evaluation results: {conf_matrix}, Accuracy: {accuracy}")
-        return float(1 - accuracy), len(conf_matrix), {"accuracy": float(accuracy)}
+        log.info(f"✅ Eval: cm={conf_matrix}, acc={accuracy:.4f}")
+        return float(1 - accuracy), num_examples, {"accuracy": float(accuracy)}
 
 
 

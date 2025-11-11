@@ -18,7 +18,7 @@ from popper.asp import ClingoGrounder, ClingoSolver
 # ✅ Load ILP settings
 kbpath = "trains"
 _, _, bias_file = load_kbpath(kbpath)
-settings = Settings(bias_file,"" , "")
+settings = Settings(bias_file,"" ,"")
 
 #kbpath = "trains"
 #bk_file, ex_file, bias_file = load_kbpath(kbpath)
@@ -54,7 +54,7 @@ log(DEBUG, "Starting Flower server with FedILP strategy.")
 # Start Flower server for three rounds of federated learning
 fl.server.start_server(
         server_address = "0.0.0.0:8080" , 
-        config=fl.server.ServerConfig(num_rounds=6),
+        config=fl.server.ServerConfig(num_rounds=4),
         strategy = strategy,
 )
 log(DEBUG, "Flower server has stopped.")

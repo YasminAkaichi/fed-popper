@@ -22,8 +22,20 @@ class Tester():
         test_pl_path = pkg_resources.resource_filename(__name__, "lp/test.pl")
 
         for x in [exs_pl_path, bk_pl_path, test_pl_path]:
+
+            # Skip empty or invalid paths
+            if not x or not isinstance(x, str) or x.strip() == "":
+                print(f"[Tester] ⚠️ Skipping empty Prolog file path: '{x}'")
+                continue
+
+            # Skip files that do not exist
+            if not os.path.exists(x):
+                print(f"[Tester] ⚠️ File does not exist, skipping consult(): {x}")
+                continue
+
             if os.name == 'nt': # if on Windows, SWI requires escaped directory separators
                 x = x.replace('\\', '\\\\')
+            print(f"[Tester] ✅ Consulting Prolog file: {x}")
             self.prolog.consult(x)
 
         # load examples
