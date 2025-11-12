@@ -1,14 +1,14 @@
 #!/usr/bin/env python
 
-from popper.util import Settings
-from popper.loop import learn_solution
+from popper.util import Settings, parse_settings
+from popper.loop import learn_solution, show_hspace
 
 if __name__ == '__main__':
-    settings = Settings(cmd_line=True)
-    prog, score, stats = learn_solution(settings)
-    if prog != None:
-        settings.print_prog_score(prog, score)
+    settings = parse_settings()
+    if settings.hspace:
+        show_hspace(settings)
     else:
-        print('NO SOLUTION')
-    if settings.show_stats:
-        stats.show()
+        _prog, stats = learn_solution(settings)
+        stats.log_final_result()
+        if settings.stats:
+            stats.show()

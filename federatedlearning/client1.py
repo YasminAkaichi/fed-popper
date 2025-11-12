@@ -18,7 +18,7 @@ log = logging.getLogger(__name__)
 kbpath = "trains"
 bk_file, ex_file, bias_file = load_kbpath(kbpath)
 
-# 🔹 Initialize ILP settings
+# 🔹 Initialize ILP settingsa
 settings = Settings(bias_file, ex_file, bk_file)
 tester = Tester(settings)
 

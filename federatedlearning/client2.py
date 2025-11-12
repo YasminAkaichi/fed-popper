@@ -15,7 +15,7 @@ logging.basicConfig(level=logging.DEBUG)
 log = logging.getLogger(__name__)
 
 # 🔹 Load dataset
-kbpath = "part2"
+kbpath = "part1"
 bk_file, ex_file, bias_file = load_kbpath(kbpath)
 
 # 🔹 Initialize ILP settings
