@@ -1,0 +1,2 @@
+timestamp,client_id,dataset,final_rule,tp,fn,tn,fp,accuracy,precision,recall,f1
+2025-12-01T15:32:01,2,trains_part2,"f(A) :- three_wheels(B), has_car(A,B).",0,0,0,0,0,0,0,0

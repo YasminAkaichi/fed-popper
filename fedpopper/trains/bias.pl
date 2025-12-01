@@ -40,6 +40,8 @@ type(circle,(load,)).
 type(triangle,(load,)).
 type(rectangle,(load,)).
 
+
+
 direction(f,(in,)).
 direction(has_car,(in,out)).
 direction(has_load,(in,out)).

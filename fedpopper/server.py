@@ -25,7 +25,6 @@ mytester = StructuralTester()
 #bk_file, ex_file, bias_file = load_kbpath(kbpath)
 
 # 🔹 Initialize ILP settings
-#settings = Settings(bias_file, ex_file, bk_file)
 mystats = Stats(log_best_programs=settings.info)
 #mytester = Tester()  # ✅ Create the tester instance
 mysolver= ClingoSolver(settings)

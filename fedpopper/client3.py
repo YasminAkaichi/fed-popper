@@ -15,7 +15,7 @@ logging.basicConfig(level=logging.DEBUG)
 log = logging.getLogger(__name__)
 
 # 🔹 Load dataset
-kbpath = "part1"
+kbpath = "trains_part2"
 bk_file, ex_file, bias_file = load_kbpath(kbpath)
 
 # 🔹 Initialize ILP settings
@@ -25,7 +25,7 @@ stats = Stats(log_best_programs=settings.info)
 settings.num_pos, settings.num_neg = len(tester.pos), len(tester.neg)
 best_score = None
 import re
-
+CLIENT_ID = 2
 def parse_clause(code: str):
     """Convert a Prolog-style rule back into (head, body) tuple."""
     
@@ -74,6 +74,96 @@ def transform_rule_to_tester_format(rule_str):
     except Exception as e:
         log.error(f"❌ Error transforming rule: {rule_str} → {e}")
         return None  # Return None to indicate failure
+
+
+import csv
+import os
+from datetime import datetime
+
+
+def save_client_result(client_id, dataset_name, rules, conf_matrix,
+                       output_file="fedpopper_client_results.csv"):
+    import csv, os
+    from datetime import datetime
+
+    expected_fields = [
+        "timestamp", "client_id", "dataset", "final_rule",
+        "tp", "fn", "tn", "fp",
+        "accuracy", "precision", "recall", "f1"
+    ]
+
+    # Sanitize inputs (avoid None creating extra columns)
+    client_id = str(client_id)
+    dataset_name = str(dataset_name)
+
+    # ---- LOAD EXISTING SAFE ----
+    rows = []
+    file_valid = True
+
+    if os.path.exists(output_file):
+        try:
+            with open(output_file, "r") as f:
+                reader = csv.DictReader(f)
+                if reader.fieldnames != expected_fields:
+                    file_valid = False
+                else:
+                    rows = list(reader)
+        except Exception:
+            file_valid = False
+
+    # ---- If invalid → reset ----
+    if not file_valid:
+        print("⚠️ CSV invalid or corrupted → resetting.")
+        rows = []
+
+    # ---- METRICS ----
+    tp, fn, tn, fp = conf_matrix
+    total = tp + fn + tn + fp
+
+    accuracy = (tp + tn) / total if total > 0 else 0
+    precision = tp / (tp + fp) if (tp + fp) > 0 else 0
+    recall = tp / (tp + fn) if (tp + fn) > 0 else 0
+    f1 = 2 * precision * recall / (precision + recall) if (precision + recall) > 0 else 0
+
+    def rule_to_string(rule):
+        head, body = rule
+        return f"{Literal.to_code(head)} :- {', '.join(Literal.to_code(b) for b in body)}."
+
+    rule_string = " | ".join(rule_to_string(r) for r in rules)
+
+    # ---- FILTER OLD ENTRY ----
+    rows = [r for r in rows
+            if not (r["client_id"] == client_id and r["dataset"] == dataset_name)]
+
+    # ---- NEW ROW ----
+    new_row = {
+        "timestamp": datetime.now().isoformat(timespec="seconds"),
+        "client_id": client_id,
+        "dataset": dataset_name,
+        "final_rule": rule_string,
+        "tp": tp, "fn": fn, "tn": tn, "fp": fp,
+        "accuracy": accuracy,
+        "precision": precision,
+        "recall": recall,
+        "f1": f1,
+    }
+
+    # Clean None values just in case
+    for k,v in new_row.items():
+        if v is None:
+            new_row[k] = ""
+
+    rows.append(new_row)
+
+    # ---- WRITE CSV ----
+    with open(output_file, "w", newline="") as f:
+        writer = csv.DictWriter(f, fieldnames=expected_fields)
+        writer.writeheader()
+        writer.writerows(rows)
+
+    print(f"💾 Saved for client {client_id} ({dataset_name}).")
+
+
 
 class FlowerClient(fl.client.NumPyClient):
     def __init__(self, tester):
@@ -178,6 +268,12 @@ class FlowerClient(fl.client.NumPyClient):
         num_examples = sum(conf_matrix)
 
         log.info(f"✅ Eval: cm={conf_matrix}, acc={accuracy:.4f}")
+        save_client_result(
+    client_id=CLIENT_ID,
+    dataset_name=kbpath,
+    rules=self.current_rules,
+    conf_matrix=conf_matrix
+)
         return float(1 - accuracy), num_examples, {"accuracy": float(accuracy)}
 
 
