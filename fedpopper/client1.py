@@ -3,10 +3,17 @@ from popper.util import Settings, Stats
 from popper.tester import Tester
 from popper.core import Clause, Literal
 from popper.util import load_kbpath, format_program
-from popper.loop import decide_outcome, calc_score, Outcome
+from popper.loop import decide_outcome, Outcome, calc_score
 import flwr as fl
 import numpy as np
+import csv
+import os
+from datetime import datetime
+from popper.core import Literal
+import pandas as pd 
 
+GLOBAL_CSV_PATH = "fedpopper_results_global.csv"
+CSV_FILE = "fedpopper_results_client1.csv"
 # 🔹 Outcome Encoding
 OUTCOME_ENCODING = {"ALL": 1, "SOME": 2, "NONE": 3}
 OUTCOME_DECODING = {1: "ALL", 2: "SOME", 3: "NONE"}
@@ -15,20 +22,17 @@ logging.basicConfig(level=logging.DEBUG)
 log = logging.getLogger(__name__)
 
 # 🔹 Load dataset
-kbpath = "trains"
+kbpath = "zendo1_part1"
 bk_file, ex_file, bias_file = load_kbpath(kbpath)
 
-# 🔹 Initialize ILP settingsa
+# 🔹 Initialize ILP settings
 settings = Settings(bias_file, ex_file, bk_file)
 tester = Tester(settings)
-
-
+stats = Stats(log_best_programs=settings.info)
 settings.num_pos, settings.num_neg = len(tester.pos), len(tester.neg)
-mystats = Stats(log_best_programs=settings.info)
-
-
+best_score = None
 import re
-
+CLIENT_ID = 1
 def parse_clause(code: str):
     """Convert a Prolog-style rule back into (head, body) tuple."""
     
@@ -78,123 +82,202 @@ def transform_rule_to_tester_format(rule_str):
         log.error(f"❌ Error transforming rule: {rule_str} → {e}")
         return None  # Return None to indicate failure
 
+
+
+CSV_COLUMNS = [
+    "timestamp", "client_id", "dataset",
+    "final_rule", "tp", "fn", "tn", "fp",
+    "accuracy", "precision", "recall", "f1",
+    "num_rules", "avg_rule_length"
+]
+
+def save_client_result(client_id, dataset_name, rules, conf_matrix):
+    """Rewrite CSV by keeping only ONE entry per (client_id, dataset)."""
+
+    # === Compute statistics ===
+    num_rules = len(rules)
+
+    def rule_length(rule):
+        head, body = rule
+        return 1 + len(body)
+
+    avg_rule_length = (
+        sum(rule_length(r) for r in rules) / num_rules if num_rules > 0 else 0
+    )
+
+    tp, fn, tn, fp = conf_matrix
+    total = tp + fn + tn + fp
+    accuracy  = (tp + tn) / total if total > 0 else 0
+    precision = tp / (tp + fp)   if (tp + fp) > 0 else 0
+    recall    = tp / (tp + fn)   if (tp + fn) > 0 else 0
+    f1 = (2 * precision * recall)/(precision + recall) if (precision + recall) else 0
+
+    # Format rule string
+    def literal_to_str(lit):
+        return Literal.to_code(lit)
+
+    def rule_to_str(rule):
+        head, body = rule
+        head_str = literal_to_str(head)
+        body_str = ", ".join(literal_to_str(l) for l in body)
+        return f"{head_str} :- {body_str}."
+
+    rule_string = " | ".join(rule_to_str(r) for r in rules)
+
+    # ============================================================
+    #   STEP 1 : read existing CSV (if exists)
+    # ============================================================
+    rows = []
+    if os.path.exists(CSV_FILE):
+        with open(CSV_FILE, "r") as f:
+            reader = csv.DictReader(f)
+            for row in reader:
+                # keep lines NOT belonging to the same (client_id, dataset)
+                if not (row["client_id"] == str(client_id) and
+                        row["dataset"] == dataset_name):
+                    rows.append(row)
+
+    # ============================================================
+    #   STEP 2 : append NEW final row for this (client,dataset)
+    # ============================================================
+    new_row = {
+        "timestamp": datetime.now().isoformat(timespec="seconds"),
+        "client_id": str(client_id),
+        "dataset": dataset_name,
+        "final_rule": rule_string,
+        "tp": tp, "fn": fn, "tn": tn, "fp": fp,
+        "accuracy": accuracy,
+        "precision": precision,
+        "recall": recall,
+        "f1": f1,
+        "num_rules": num_rules,
+        "avg_rule_length": avg_rule_length,
+    }
+
+    rows.append(new_row)
+
+    # ============================================================
+    #   STEP 3 : rewrite CSV from scratch (overwrite)
+    # ============================================================
+    with open(CSV_FILE, "w", newline="") as f:
+        writer = csv.DictWriter(f, fieldnames=CSV_COLUMNS)
+        writer.writeheader()
+        writer.writerows(rows)
+
+    print(f"📌 Updated (client={client_id}, dataset={dataset_name}) in {CSV_FILE}")
+
+
 class FlowerClient(fl.client.NumPyClient):
-    def __init__(self, tester):
+    def __init__(self, tester, stats):
         """Initialize the Flower client with its ILP components."""
         self.tester = tester  # Tester for ILP evaluation
         self.current_rules = None  # Store current hypothesis
         self.encoded_outcome = None  # Store encoded outcome as (E+, E-)
-
+        self.best_score = None  # <- track across rounds if you want
+        self.local_records = [] 
+        self.stats = stats
     def encode_outcome(self, outcome):
-        """Convert ('ALL', 'SOME', 'NONE') to (1,2,3) encoding."""
-        normalized_outcome = (outcome[0].upper(), outcome[1].upper())  # Convert to uppercase
-        return (OUTCOME_ENCODING[normalized_outcome[0]], OUTCOME_ENCODING[normalized_outcome[1]])
+        norm = (outcome[0].upper(), outcome[1].upper())
+        return (OUTCOME_ENCODING[norm[0]], OUTCOME_ENCODING[norm[1]])
 
-    def decode_outcome(self, encoded_outcome):
-        """Convert (1,2,3) encoding back to ('ALL', 'SOME', 'NONE')."""
-        return (OUTCOME_DECODING[encoded_outcome[0]], OUTCOME_DECODING[encoded_outcome[1]])
+    def decode_outcome(self, enc):
+        return (OUTCOME_DECODING[int(enc[0])], OUTCOME_DECODING[int(enc[1])])
 
     def get_parameters(self, config):
-        """Retrieve and send the last computed (E+, E-) outcome to the server."""
+        # Send last computed (E+,E-) (encoded as ints)
         if self.encoded_outcome is None:
             log.warning("⚠️ No computed outcome yet, sending empty array.")
-            return [np.array([])]
-        return [np.array(self.encoded_outcome)]  # ✅ Send encoded outcome
+            return [np.array([], dtype=np.int64)]
+        return [np.array(self.encoded_outcome, dtype=np.int64)]
 
     def set_parameters(self, parameters):
-        """Receive and store the new hypothesis (rules) from the server."""
+        """Receive rules from server and parse to Popper (Clause, Literal)."""
         log.debug(f"📥 Raw received parameters: {parameters}")
 
-        if parameters[0].size == 0:
+        # (1) Pas de paramètres → aucune règle
+        if not parameters or parameters[0].size == 0:
             log.debug("🚨 No rules received, skipping update.")
             self.current_rules = []
-            return 
+            return
 
-        received_rules = parameters[0].tolist()
-        log.debug(f"🔹 Converted received rules to list: {received_rules}")
+        arr = parameters[0]
+
+        # (2) Si ce ne sont PAS des strings → ce ne sont PAS des règles
+        if arr.dtype.kind not in ["U", "S", "O"]: 
+            log.debug("🚨 Received parameters are NOT rules (maybe outcomes). Skipping update.")
+            self.current_rules = []
+            return
 
         try:
-            # ✅ Convert received rules into Clause objects
-            parsed_rules = [transform_rule_to_tester_format(rule) for rule in received_rules]
+            # (3) Convertir les règles (strings)
+            received_rules = arr.tolist()
+            log.debug(f"🔹 Received rules: {received_rules}")
 
-            # 🔹 Remove any None values (failed transformations)
-            self.current_rules = [rule for rule in parsed_rules if rule is not None]
+            # (4) Convertir en structure Popper
+            parsed = [transform_rule_to_tester_format(r) for r in received_rules]
+            self.current_rules = [p for p in parsed if p is not None]
 
-            log.debug(f"✅ Updated client hypothesis: {self.current_rules}")
+            log.debug(f"✅ Parsed hypothesis: {self.current_rules}")
+
         except Exception as e:
             log.error(f"❌ Error processing received rules: {e}")
-            self.current_rules = []  # Reset to empty if parsing fails
+            self.current_rules = []
+    
 
 
-
+    
     def fit(self, parameters, config):
-        """Test the received rules, compute outcomes, and send them back."""
-        self.set_parameters(parameters)  # ✅ Update rules before testing
-        log.debug(f"🔹 Current rules: {self.current_rules}")
+        """Test rules locally, compute local outcome (E+,E-), send encoded."""
+        self.set_parameters(parameters)
 
         if not self.current_rules:
-            log.warning("🚨 No rules available! Sending default outcome (NONE, NONE).")
+            log.warning("🚨 No rules available! Sending default outcome (NONE,NONE).")
             self.encoded_outcome = (OUTCOME_ENCODING["NONE"], OUTCOME_ENCODING["NONE"])
-            return [np.array(self.encoded_outcome)], len(self.encoded_outcome), {}
+            num_examples = settings.num_pos + settings.num_neg
+            return [np.array(self.encoded_outcome, dtype=np.int64)], num_examples, {}
 
-        # 1️⃣ **Test the Rules**
-        log.debug("Testing received rules...")
-        best_score = None
-        with mystats.duration('test'):
+        with stats.duration('test'):
+            print(f"cuurrreeeeeeeeennnnt rules{self.current_rules}")
             conf_matrix = self.tester.test(self.current_rules)
-            outcome = decide_outcome(conf_matrix)
-            score = calc_score(conf_matrix)
-            log.debug(f"score is {score}")
-        mystats.register_program(self.current_rules, conf_matrix)
-        log.debug(f"Outcome: {outcome}")
-        
-        if best_score == None or score > best_score:
-                best_score = score
+        log.debug(f"Confusion matrix: {conf_matrix}")
 
-                if outcome == (Outcome.ALL, Outcome.NONE):
-                    mystats.register_solution(self.current_rules, conf_matrix)
-                    return mystats.solution.code
+        outcome = decide_outcome(conf_matrix)
+        score = calc_score(conf_matrix)
+        stats.register_program(self.current_rules, conf_matrix)
 
-                mystats.register_best_program(self.current_rules, conf_matrix)
-        # 3️⃣ **Encode outcome before sending**
+        if self.best_score is None or score > self.best_score:
+            self.best_score = score
+            if outcome == (Outcome.ALL, Outcome.NONE):
+                stats.register_solution(self.current_rules, conf_matrix)
+            stats.register_best_program(self.current_rules, conf_matrix)
+
+        # Encode and return as ints
         self.encoded_outcome = self.encode_outcome(outcome)
-        log.info(f"🔹 Computed Outcome: {outcome} → Encoded: {self.encoded_outcome}")
-        mystats.register_completion()
-        return [np.array(self.encoded_outcome)], len(self.encoded_outcome), {}
+        num_examples = settings.num_pos + settings.num_neg
+        log.info(f"🔹 Outcome: {outcome} → Encoded: {self.encoded_outcome}")
+        return [np.array(self.encoded_outcome, dtype=np.int64)], num_examples, {}
 
 
     def evaluate(self, parameters, config):
-        """Evaluate the hypothesis and return accuracy."""
-        log.info(f"📥 Received parameters for evaluation: {parameters}")
-
-        try:
-            self.set_parameters(parameters)
-            #received_rules = parameters[0].tolist()
-            #log.info(f"📥 Received rules for evaluation: {received_rules}")
-            
-            #self.current_rules = [(Clause.from_string(rule)) for rule in received_rules]
-            #log.info(f"📥 Updated client hypothesis: {self.current_rules}")
-        except Exception as e:
-            log.error(f"❌ Error processing received rules: {e}")
-            self.current_rules = []
-        
+        """Return loss, num_examples, metrics."""
+        self.set_parameters(parameters)
         if not self.current_rules:
-            log.warning("🚨 No rules to evaluate! Skipping evaluation.")
+            log.warning("No rules to evaluate! Skipping.")
             return 1.0, 0, {"accuracy": 0.0}
 
         conf_matrix = self.tester.test(self.current_rules)
         
-        #score = calc_score(conf_matrix)
-        accuracy = (conf_matrix[0] + conf_matrix[2]) / sum(conf_matrix)
+        total = sum(conf_matrix) if sum(conf_matrix) > 0 else 1
+        accuracy = (conf_matrix[0] + conf_matrix[2]) / total
+        num_examples = sum(conf_matrix)
 
-        log.info(f"✅ Evaluation results: {conf_matrix}, Accuracy: {accuracy}")
-        return 1 - accuracy, len(conf_matrix), {"accuracy": float(accuracy)}
-
-
+        log.info(f"Eval: cm={conf_matrix}, acc={accuracy:.4f}")
+        #save_client_result(client_id=CLIENT_ID,dataset_name=kbpath,rules=self.current_rules,conf_matrix=conf_matrix)
+        return float(1 - accuracy), num_examples, {"accuracy": float(accuracy)}
 
 
 # 🔹 Start the client
 fl.client.start_client(
     server_address="localhost:8080",
-    client=FlowerClient(tester).to_client(),  # ✅ Fixed Flower API usage
+    client=FlowerClient(tester,stats).to_client(),  # ✅ Fixed Flower API usage
 )

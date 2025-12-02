@@ -1,0 +1,3 @@
+timestamp,client_id,dataset,final_rule,tp,fn,tn,fp,accuracy,precision,recall,f1,num_rules,avg_rule_length
+2025-12-02T15:20:59,2,trains_part2,"f(A) :- has_load(C,B), has_car(A,C), one_load(D), circle(B), has_load(C,D), two_load(B). | f(A) :- has_car(A,B), circle(D), has_load(B,D), has_car(A,E), has_load(B,C), has_load(E,C).",2,0,1,1,0.75,0.6666666666666666,1.0,0.8,2,7.0
+2025-12-02T15:22:04,2,trains_part3,"f(A) :- has_load(C,B), has_load(D,E), circle(B), has_car(A,C), has_car(A,D), has_load(C,E). | f(A) :- has_load(C,B), one_load(D), one_load(B), has_car(A,C), has_load(C,D), zero_load(D). | f(A) :- has_car(A,E), two_load(D), has_car(A,B), has_load(E,C), two_load(C), has_load(B,D).",1,0,1,0,1.0,1.0,1.0,1.0,3,7.0

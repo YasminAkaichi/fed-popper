@@ -1,0 +1,13 @@
+pos(zendo(18)).
+pos(zendo(8)).
+pos(zendo(12)).
+pos(zendo(13)).
+pos(zendo(10)).
+pos(zendo(3)).
+pos(zendo(7)).
+neg(zendo(39)).neg(zendo(21)).
+neg(zendo(24)).
+neg(zendo(38)).
+neg(zendo(20)).
+neg(zendo(30)).
+neg(zendo(36)).

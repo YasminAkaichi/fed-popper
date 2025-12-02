@@ -17,7 +17,7 @@ from popper.asp import ClingoGrounder, ClingoSolver
 # Create strategy with configuration
 
 # ✅ Load ILP settings
-kbpath = "trains"
+kbpath = "zendo1"
 _, _, bias_file = load_kbpath(kbpath)
 settings = Settings(bias_file,None, None)
 mytester = StructuralTester()
@@ -45,8 +45,10 @@ strategy = FedPopper(
     tester = mytester,
     constrainer= myconstrainer,
     fraction_fit=1,  # Use 50% of clients in each round
-    min_fit_clients=2,
-    min_available_clients=2,
+    fraction_evaluate= 1,
+    min_fit_clients=3,
+    min_available_clients=3,
+    min_evaluate_clients= 3,
     fit_metrics_aggregation_fn=None,
 )
 

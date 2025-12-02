@@ -6,7 +6,14 @@ from popper.util import load_kbpath, format_program
 from popper.loop import decide_outcome, Outcome, calc_score
 import flwr as fl
 import numpy as np
+import csv
+import os
+from datetime import datetime
+from popper.core import Literal
+import pandas as pd 
 
+GLOBAL_CSV_PATH = "fedpopper_results_global.csv"
+CSV_FILE = "fedpopper_results_client2.csv"
 # 🔹 Outcome Encoding
 OUTCOME_ENCODING = {"ALL": 1, "SOME": 2, "NONE": 3}
 OUTCOME_DECODING = {1: "ALL", 2: "SOME", 3: "NONE"}
@@ -15,7 +22,7 @@ logging.basicConfig(level=logging.DEBUG)
 log = logging.getLogger(__name__)
 
 # 🔹 Load dataset
-kbpath = "trains_part1"
+kbpath = "zendo1_part2"
 bk_file, ex_file, bias_file = load_kbpath(kbpath)
 
 # 🔹 Initialize ILP settings
@@ -75,70 +82,67 @@ def transform_rule_to_tester_format(rule_str):
         log.error(f"❌ Error transforming rule: {rule_str} → {e}")
         return None  # Return None to indicate failure
 
-import csv
-import os
-from datetime import datetime
 
 
+CSV_COLUMNS = [
+    "timestamp", "client_id", "dataset",
+    "final_rule", "tp", "fn", "tn", "fp",
+    "accuracy", "precision", "recall", "f1",
+    "num_rules", "avg_rule_length"
+]
 
-def save_client_result(client_id, dataset_name, rules, conf_matrix,
-                       output_file="fedpopper_client_results.csv"):
-    import csv, os
-    from datetime import datetime
+def save_client_result(client_id, dataset_name, rules, conf_matrix):
+    """Rewrite CSV by keeping only ONE entry per (client_id, dataset)."""
 
-    expected_fields = [
-        "timestamp", "client_id", "dataset", "final_rule",
-        "tp", "fn", "tn", "fp",
-        "accuracy", "precision", "recall", "f1"
-    ]
+    # === Compute statistics ===
+    num_rules = len(rules)
 
-    # Sanitize inputs (avoid None creating extra columns)
-    client_id = str(client_id)
-    dataset_name = str(dataset_name)
+    def rule_length(rule):
+        head, body = rule
+        return 1 + len(body)
 
-    # ---- LOAD EXISTING SAFE ----
-    rows = []
-    file_valid = True
+    avg_rule_length = (
+        sum(rule_length(r) for r in rules) / num_rules if num_rules > 0 else 0
+    )
 
-    if os.path.exists(output_file):
-        try:
-            with open(output_file, "r") as f:
-                reader = csv.DictReader(f)
-                if reader.fieldnames != expected_fields:
-                    file_valid = False
-                else:
-                    rows = list(reader)
-        except Exception:
-            file_valid = False
-
-    # ---- If invalid → reset ----
-    if not file_valid:
-        print("⚠️ CSV invalid or corrupted → resetting.")
-        rows = []
-
-    # ---- METRICS ----
     tp, fn, tn, fp = conf_matrix
     total = tp + fn + tn + fp
+    accuracy  = (tp + tn) / total if total > 0 else 0
+    precision = tp / (tp + fp)   if (tp + fp) > 0 else 0
+    recall    = tp / (tp + fn)   if (tp + fn) > 0 else 0
+    f1 = (2 * precision * recall)/(precision + recall) if (precision + recall) else 0
 
-    accuracy = (tp + tn) / total if total > 0 else 0
-    precision = tp / (tp + fp) if (tp + fp) > 0 else 0
-    recall = tp / (tp + fn) if (tp + fn) > 0 else 0
-    f1 = 2 * precision * recall / (precision + recall) if (precision + recall) > 0 else 0
+    # Format rule string
+    def literal_to_str(lit):
+        return Literal.to_code(lit)
 
-    def rule_to_string(rule):
+    def rule_to_str(rule):
         head, body = rule
-        return f"{Literal.to_code(head)} :- {', '.join(Literal.to_code(b) for b in body)}."
+        head_str = literal_to_str(head)
+        body_str = ", ".join(literal_to_str(l) for l in body)
+        return f"{head_str} :- {body_str}."
 
-    rule_string = " | ".join(rule_to_string(r) for r in rules)
+    rule_string = " | ".join(rule_to_str(r) for r in rules)
 
-    # ---- FILTER OLD ENTRY ----
-    rows = [r for r in rows
-            if not (r["client_id"] == client_id and r["dataset"] == dataset_name)]
+    # ============================================================
+    #   STEP 1 : read existing CSV (if exists)
+    # ============================================================
+    rows = []
+    if os.path.exists(CSV_FILE):
+        with open(CSV_FILE, "r") as f:
+            reader = csv.DictReader(f)
+            for row in reader:
+                # keep lines NOT belonging to the same (client_id, dataset)
+                if not (row["client_id"] == str(client_id) and
+                        row["dataset"] == dataset_name):
+                    rows.append(row)
 
-    # ---- NEW ROW ----
+    # ============================================================
+    #   STEP 2 : append NEW final row for this (client,dataset)
+    # ============================================================
     new_row = {
         "timestamp": datetime.now().isoformat(timespec="seconds"),
-        "client_id": client_id,
+        "client_id": str(client_id),
         "dataset": dataset_name,
         "final_rule": rule_string,
         "tp": tp, "fn": fn, "tn": tn, "fp": fp,
@@ -146,34 +150,32 @@ def save_client_result(client_id, dataset_name, rules, conf_matrix,
         "precision": precision,
         "recall": recall,
         "f1": f1,
+        "num_rules": num_rules,
+        "avg_rule_length": avg_rule_length,
     }
-
-    # Clean None values just in case
-    for k,v in new_row.items():
-        if v is None:
-            new_row[k] = ""
 
     rows.append(new_row)
 
-    # ---- WRITE CSV ----
-    with open(output_file, "w", newline="") as f:
-        writer = csv.DictWriter(f, fieldnames=expected_fields)
+    # ============================================================
+    #   STEP 3 : rewrite CSV from scratch (overwrite)
+    # ============================================================
+    with open(CSV_FILE, "w", newline="") as f:
+        writer = csv.DictWriter(f, fieldnames=CSV_COLUMNS)
         writer.writeheader()
         writer.writerows(rows)
 
-    print(f"💾 Saved for client {client_id} ({dataset_name}).")
-
-
+    print(f"📌 Updated (client={client_id}, dataset={dataset_name}) in {CSV_FILE}")
 
 
 class FlowerClient(fl.client.NumPyClient):
-    def __init__(self, tester):
+    def __init__(self, tester, stats):
         """Initialize the Flower client with its ILP components."""
         self.tester = tester  # Tester for ILP evaluation
         self.current_rules = None  # Store current hypothesis
         self.encoded_outcome = None  # Store encoded outcome as (E+, E-)
         self.best_score = None  # <- track across rounds if you want
-
+        self.local_records = [] 
+        self.stats = stats
     def encode_outcome(self, outcome):
         norm = (outcome[0].upper(), outcome[1].upper())
         return (OUTCOME_ENCODING[norm[0]], OUTCOME_ENCODING[norm[1]])
@@ -220,8 +222,7 @@ class FlowerClient(fl.client.NumPyClient):
         except Exception as e:
             log.error(f"❌ Error processing received rules: {e}")
             self.current_rules = []
-
-
+    
 
 
     
@@ -259,26 +260,20 @@ class FlowerClient(fl.client.NumPyClient):
 
     def evaluate(self, parameters, config):
         """Return loss, num_examples, metrics."""
+        is_final = config.get("final_evaluation", False)
         self.set_parameters(parameters)
         if not self.current_rules:
-            log.warning("🚨 No rules to evaluate! Skipping.")
+            log.warning("No rules to evaluate! Skipping.")
             return 1.0, 0, {"accuracy": 0.0}
 
         conf_matrix = self.tester.test(self.current_rules)
+        
         total = sum(conf_matrix) if sum(conf_matrix) > 0 else 1
         accuracy = (conf_matrix[0] + conf_matrix[2]) / total
         num_examples = sum(conf_matrix)
 
-        log.info(f"✅ Eval: cm={conf_matrix}, acc={accuracy:.4f}")
-
-        # Save final metrics for this client
-        save_client_result(
-    client_id=CLIENT_ID,
-    dataset_name=kbpath,
-    rules=self.current_rules,
-    conf_matrix=conf_matrix
-)
-
+        log.info(f"Eval: cm={conf_matrix}, acc={accuracy:.4f}")
+        #save_client_result(client_id=CLIENT_ID,dataset_name=kbpath,rules=self.current_rules,conf_matrix=conf_matrix)
         return float(1 - accuracy), num_examples, {"accuracy": float(accuracy)}
 
 
@@ -287,5 +282,5 @@ class FlowerClient(fl.client.NumPyClient):
 # 🔹 Start the client
 fl.client.start_client(
     server_address="localhost:8080",
-    client=FlowerClient(tester).to_client(),  # ✅ Fixed Flower API usage
+    client=FlowerClient(tester,stats).to_client(),  # ✅ Fixed Flower API usage
 )
