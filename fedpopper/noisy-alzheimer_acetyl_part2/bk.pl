@@ -1,3 +1,5 @@
+:-style_check(-discontiguous).
+:-style_check(-singleton).
 alk_groups(a1,0).
 alk_groups(aa1,1).
 alk_groups(b1,0).

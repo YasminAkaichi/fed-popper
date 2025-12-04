@@ -22,7 +22,7 @@ logging.basicConfig(level=logging.DEBUG)
 log = logging.getLogger(__name__)
 
 # 🔹 Load dataset
-kbpath = "zendo1_part3"
+kbpath = "/Users/yasmineakaichi/fed-popper/fedpopper/trains2_part3"
 bk_file, ex_file, bias_file = load_kbpath(kbpath)
 
 # 🔹 Initialize ILP settings
@@ -288,11 +288,19 @@ class FlowerClient(fl.client.NumPyClient):
             return 1.0, 0, {"accuracy": 0.0}
 
         conf_matrix = self.tester.test(self.current_rules)
+        
         total = sum(conf_matrix) if sum(conf_matrix) > 0 else 1
         accuracy = (conf_matrix[0] + conf_matrix[2]) / total
+        tp, fn, tn, fp = conf_matrix
+        total = tp + fn + tn + fp if (tp + fn + tn + fp) > 0 else 1
+
+        accuracy = (tp + tn) / total
+        recall = tp / (tp + fn) if (tp + fn) > 0 else 0
         num_examples = sum(conf_matrix)
 
-        log.info(f"Eval: cm={conf_matrix}, acc={accuracy:.4f}")
+
+        
+        log.info(f" current rules: {self.current_rules}, Eval: cm={conf_matrix}, acc={accuracy:.4f}, recall={recall:.4f}")
     
         #save_client_result(client_id=CLIENT_ID,dataset_name=kbpath,rules=self.current_rules,conf_matrix=conf_matrix)
         return float(1 - accuracy), num_examples, {"accuracy": float(accuracy)}

@@ -6,14 +6,14 @@ from popper.util import load_kbpath, format_program
 from popper.loop import decide_outcome, Outcome, calc_score
 import flwr as fl
 import numpy as np
-
-import pandas as pd
 import csv
 import os
 from datetime import datetime
 from popper.core import Literal
+import pandas as pd 
 
-CSV_FILE = "fedpopper_results_client3.csv"
+GLOBAL_CSV_PATH = "fedpopper_results_global.csv"
+CSV_FILE = "fedpopper_results_client2.csv"
 # 🔹 Outcome Encoding
 OUTCOME_ENCODING = {"ALL": 1, "SOME": 2, "NONE": 3}
 OUTCOME_DECODING = {1: "ALL", 2: "SOME", 3: "NONE"}
@@ -22,7 +22,7 @@ logging.basicConfig(level=logging.DEBUG)
 log = logging.getLogger(__name__)
 
 # 🔹 Load dataset
-kbpath = "trainspart2"
+kbpath = "noisy-alzheimer_acetyl_part2"
 bk_file, ex_file, bias_file = load_kbpath(kbpath)
 
 # 🔹 Initialize ILP settings
@@ -32,7 +32,7 @@ stats = Stats(log_best_programs=settings.info)
 settings.num_pos, settings.num_neg = len(tester.pos), len(tester.neg)
 best_score = None
 import re
-CLIENT_ID = 2
+CLIENT_ID = 1
 def parse_clause(code: str):
     """Convert a Prolog-style rule back into (head, body) tuple."""
     
@@ -81,6 +81,7 @@ def transform_rule_to_tester_format(rule_str):
     except Exception as e:
         log.error(f"❌ Error transforming rule: {rule_str} → {e}")
         return None  # Return None to indicate failure
+
 
 
 CSV_COLUMNS = [
@@ -165,38 +166,16 @@ def save_client_result(client_id, dataset_name, rules, conf_matrix):
 
     print(f"📌 Updated (client={client_id}, dataset={dataset_name}) in {CSV_FILE}")
 
-def add_local_record(self, client_id, dataset, rules, conf_matrix):
-
-    tp, fn, tn, fp = conf_matrix
-    rule_lengths = [len(rule[1]) for rule in rules] if rules else []
-    rule_len = max(rule_lengths) if rule_lengths else 0
-    n_rules = len(rules)
-
-    row = {
-        "timestamp": datetime.now().isoformat(timespec="seconds"),
-        "client_id": client_id,
-        "dataset": dataset,
-        "tp": tp, "fn": fn, "tn": tn, "fp": fp,
-        "rule_length": rule_len,
-        "n_rules": n_rules,
-        "final_rule": " | ".join(
-            f"{Literal.to_code(h)} :- {', '.join(Literal.to_code(b) for b in body)}."
-            for (h, body) in rules
-        )
-    }
-
-    self.local_records.append(row)
 
 class FlowerClient(fl.client.NumPyClient):
-    def __init__(self, tester):
+    def __init__(self, tester, stats):
         """Initialize the Flower client with its ILP components."""
         self.tester = tester  # Tester for ILP evaluation
         self.current_rules = None  # Store current hypothesis
         self.encoded_outcome = None  # Store encoded outcome as (E+, E-)
         self.best_score = None  # <- track across rounds if you want
-        self.local_records = []        # accumulate rows here
-
-
+        self.local_records = [] 
+        self.stats = stats
     def encode_outcome(self, outcome):
         norm = (outcome[0].upper(), outcome[1].upper())
         return (OUTCOME_ENCODING[norm[0]], OUTCOME_ENCODING[norm[1]])
@@ -243,8 +222,7 @@ class FlowerClient(fl.client.NumPyClient):
         except Exception as e:
             log.error(f"❌ Error processing received rules: {e}")
             self.current_rules = []
-
-
+    
 
 
     
@@ -259,6 +237,7 @@ class FlowerClient(fl.client.NumPyClient):
             return [np.array(self.encoded_outcome, dtype=np.int64)], num_examples, {}
 
         with stats.duration('test'):
+            print(f"cuurrreeeeeeeeennnnt rules{self.current_rules}")
             conf_matrix = self.tester.test(self.current_rules)
         log.debug(f"Confusion matrix: {conf_matrix}")
 
@@ -288,12 +267,13 @@ class FlowerClient(fl.client.NumPyClient):
             return 1.0, 0, {"accuracy": 0.0}
 
         conf_matrix = self.tester.test(self.current_rules)
+        
         total = sum(conf_matrix) if sum(conf_matrix) > 0 else 1
         accuracy = (conf_matrix[0] + conf_matrix[2]) / total
+        recall = (conf_matrix[0]) / (conf_matrix[0] + conf_matrix[1])
         num_examples = sum(conf_matrix)
 
-        log.info(f"Eval: cm={conf_matrix}, acc={accuracy:.4f}")
-    
+        log.info(f"Eval: cm={conf_matrix}, acc={accuracy:.4f}, recall={recall:.4f}")
         #save_client_result(client_id=CLIENT_ID,dataset_name=kbpath,rules=self.current_rules,conf_matrix=conf_matrix)
         return float(1 - accuracy), num_examples, {"accuracy": float(accuracy)}
 
@@ -303,5 +283,5 @@ class FlowerClient(fl.client.NumPyClient):
 # 🔹 Start the client
 fl.client.start_client(
     server_address="localhost:8080",
-    client=FlowerClient(tester).to_client(),  # ✅ Fixed Flower API usage
+    client=FlowerClient(tester,stats).to_client(),  # ✅ Fixed Flower API usage
 )

@@ -17,7 +17,7 @@ from popper.asp import ClingoGrounder, ClingoSolver
 # Create strategy with configuration
 
 # ✅ Load ILP settings
-kbpath = "zendo1"
+kbpath = "/Users/yasmineakaichi/fed-popper/fedpopper/trains2"
 _, _, bias_file = load_kbpath(kbpath)
 settings = Settings(bias_file,None, None)
 mytester = StructuralTester()
@@ -56,7 +56,7 @@ log(DEBUG, "Starting Flower server with FedILP strategy.")
 # Start Flower server for three rounds of federated learning
 fl.server.start_server(
         server_address = "0.0.0.0:8080" , 
-        config=fl.server.ServerConfig(num_rounds=2000),
+        config=fl.server.ServerConfig(num_rounds=10000),
         strategy = strategy,
 )
 log(DEBUG, "Flower server has stopped.")

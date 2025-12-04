@@ -9,7 +9,7 @@
 %% volume = {14},
 %% year = {1996}
 %% }
-max_clauses(6).
+max_clauses(3).
 max_vars(5).
 max_body(6).
 head_pred(great,2).
