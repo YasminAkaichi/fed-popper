@@ -97,5 +97,4 @@ FedPopper inherits Popper’s operational non-determinism:
 the underlying ASP solver may explore different valid search branches across executions.
 For this reason, you may occasionally need to run FedPopper 2–3 times before obtaining the same final hypothesis reported in our experiments.
 
-This does not indicate a configuration error — it simply reflects
-the solver’s internal heuristics and the dependency of the search trajectory on the order of failures encountered during learning.
+This does not indicate a configuration error, it simply reflects the solver’s internal heuristics and the dependency of the search trajectory on the order of failures encountered during learning.
