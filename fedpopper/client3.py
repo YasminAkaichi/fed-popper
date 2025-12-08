@@ -6,42 +6,42 @@ from popper.util import load_kbpath, format_program
 from popper.loop import decide_outcome, Outcome, calc_score
 import flwr as fl
 import numpy as np
-
-import pandas as pd
 import csv
 import os
 from datetime import datetime
 from popper.core import Literal
+import pandas as pd 
 
-CSV_FILE = "fedpopper_results_client3.csv"
-# 🔹 Outcome Encoding
+GLOBAL_CSV_PATH = "fedpopper_results_global.csv"
+CSV_FILE = "fedpopper_results_client1.csv"
+#Outcome Encoding
 OUTCOME_ENCODING = {"ALL": 1, "SOME": 2, "NONE": 3}
 OUTCOME_DECODING = {1: "ALL", 2: "SOME", 3: "NONE"}
-# 🔹 Logging Setup
+#Logging Setup
 logging.basicConfig(level=logging.DEBUG)
 log = logging.getLogger(__name__)
 
-# 🔹 Load dataset
-kbpath = "/Users/yasmineakaichi/fed-popper/fedpopper/trains2_part3"
+#Load dataset
+kbpath = "/Users/yasmineakaichi/fed-popper/fedpopper/trains_part3"
 bk_file, ex_file, bias_file = load_kbpath(kbpath)
 
-# 🔹 Initialize ILP settings
+#Initialize ILP settings
 settings = Settings(bias_file, ex_file, bk_file)
 tester = Tester(settings)
 stats = Stats(log_best_programs=settings.info)
 settings.num_pos, settings.num_neg = len(tester.pos), len(tester.neg)
 best_score = None
 import re
-CLIENT_ID = 2
+CLIENT_ID = 3
 def parse_clause(code: str):
     """Convert a Prolog-style rule back into (head, body) tuple."""
     
-    # 1️⃣ Remove the final period if present
+    # Remove the final period if present
     code = code.strip()
     if code.endswith('.'):
         code = code[:-1]
     
-    # 2️⃣ Split head and body
+    # Split head and body
     if ":-" in code:
         head, body = code.split(":-")
         body_literals = tuple(lit.strip() for lit in body.split(","))
@@ -56,7 +56,7 @@ def transform_rule_to_tester_format(rule_str):
     log.debug(f"🔍 Transforming rule: {rule_str}")
 
     try:
-        # ✅ Split head and body correctly
+        #Split head and body correctly
         head_body = rule_str.split(":-")
         if len(head_body) != 2:
             raise ValueError(f"Invalid rule format: {rule_str}")
@@ -64,23 +64,24 @@ def transform_rule_to_tester_format(rule_str):
         head_str = head_body[0].strip()
         body_str = head_body[1].strip()
 
-        # ✅ **Fix: Properly extract body literals using regex**
+        #Fix: Properly extract body literals using regex
         body_literals = re.findall(r'\w+\(.*?\)', body_str)
 
-        log.debug(f"🔹 Parsed head: {head_str}")
-        log.debug(f"🔹 Parsed body literals: {body_literals}")
+        log.debug(f"Parsed head: {head_str}")
+        log.debug(f"Parsed body literals: {body_literals}")
 
-        # ✅ Convert to Literal objects (assuming `Literal.from_string` exists)
+        #Convert to Literal objects (assuming `Literal.from_string` exists)
         head = Literal.from_string(head_str)
         body = tuple(Literal.from_string(lit) for lit in body_literals)
 
         formatted_rule = (head, body)
-        log.debug(f"✅ Formatted rule: {formatted_rule}")
+        log.debug(f"Formatted rule: {formatted_rule}")
 
         return formatted_rule
     except Exception as e:
-        log.error(f"❌ Error transforming rule: {rule_str} → {e}")
+        log.error(f"Error transforming rule: {rule_str} → {e}")
         return None  # Return None to indicate failure
+
 
 
 CSV_COLUMNS = [
@@ -165,38 +166,16 @@ def save_client_result(client_id, dataset_name, rules, conf_matrix):
 
     print(f"📌 Updated (client={client_id}, dataset={dataset_name}) in {CSV_FILE}")
 
-def add_local_record(self, client_id, dataset, rules, conf_matrix):
-
-    tp, fn, tn, fp = conf_matrix
-    rule_lengths = [len(rule[1]) for rule in rules] if rules else []
-    rule_len = max(rule_lengths) if rule_lengths else 0
-    n_rules = len(rules)
-
-    row = {
-        "timestamp": datetime.now().isoformat(timespec="seconds"),
-        "client_id": client_id,
-        "dataset": dataset,
-        "tp": tp, "fn": fn, "tn": tn, "fp": fp,
-        "rule_length": rule_len,
-        "n_rules": n_rules,
-        "final_rule": " | ".join(
-            f"{Literal.to_code(h)} :- {', '.join(Literal.to_code(b) for b in body)}."
-            for (h, body) in rules
-        )
-    }
-
-    self.local_records.append(row)
 
 class FlowerClient(fl.client.NumPyClient):
-    def __init__(self, tester):
+    def __init__(self, tester, stats):
         """Initialize the Flower client with its ILP components."""
         self.tester = tester  # Tester for ILP evaluation
         self.current_rules = None  # Store current hypothesis
         self.encoded_outcome = None  # Store encoded outcome as (E+, E-)
         self.best_score = None  # <- track across rounds if you want
-        self.local_records = []        # accumulate rows here
-
-
+        self.local_records = [] 
+        self.stats = stats
     def encode_outcome(self, outcome):
         norm = (outcome[0].upper(), outcome[1].upper())
         return (OUTCOME_ENCODING[norm[0]], OUTCOME_ENCODING[norm[1]])
@@ -207,17 +186,17 @@ class FlowerClient(fl.client.NumPyClient):
     def get_parameters(self, config):
         # Send last computed (E+,E-) (encoded as ints)
         if self.encoded_outcome is None:
-            log.warning("⚠️ No computed outcome yet, sending empty array.")
+            log.warning("No computed outcome yet, sending empty array.")
             return [np.array([], dtype=np.int64)]
         return [np.array(self.encoded_outcome, dtype=np.int64)]
 
     def set_parameters(self, parameters):
         """Receive rules from server and parse to Popper (Clause, Literal)."""
-        log.debug(f"📥 Raw received parameters: {parameters}")
+        log.debug(f"Raw received parameters: {parameters}")
 
         # (1) Pas de paramètres → aucune règle
         if not parameters or parameters[0].size == 0:
-            log.debug("🚨 No rules received, skipping update.")
+            log.debug("No rules received, skipping update.")
             self.current_rules = []
             return
 
@@ -225,26 +204,25 @@ class FlowerClient(fl.client.NumPyClient):
 
         # (2) Si ce ne sont PAS des strings → ce ne sont PAS des règles
         if arr.dtype.kind not in ["U", "S", "O"]: 
-            log.debug("🚨 Received parameters are NOT rules (maybe outcomes). Skipping update.")
+            log.debug("Received parameters are NOT rules (maybe outcomes). Skipping update.")
             self.current_rules = []
             return
 
         try:
             # (3) Convertir les règles (strings)
             received_rules = arr.tolist()
-            log.debug(f"🔹 Received rules: {received_rules}")
+            log.debug(f"Received rules: {received_rules}")
 
             # (4) Convertir en structure Popper
             parsed = [transform_rule_to_tester_format(r) for r in received_rules]
             self.current_rules = [p for p in parsed if p is not None]
 
-            log.debug(f"✅ Parsed hypothesis: {self.current_rules}")
+            log.debug(f"Parsed hypothesis: {self.current_rules}")
 
         except Exception as e:
-            log.error(f"❌ Error processing received rules: {e}")
+            log.error(f"Error processing received rules: {e}")
             self.current_rules = []
-
-
+    
 
 
     
@@ -253,12 +231,13 @@ class FlowerClient(fl.client.NumPyClient):
         self.set_parameters(parameters)
 
         if not self.current_rules:
-            log.warning("🚨 No rules available! Sending default outcome (NONE,NONE).")
+            log.warning("No rules available! Sending default outcome (NONE,NONE).")
             self.encoded_outcome = (OUTCOME_ENCODING["NONE"], OUTCOME_ENCODING["NONE"])
             num_examples = settings.num_pos + settings.num_neg
             return [np.array(self.encoded_outcome, dtype=np.int64)], num_examples, {}
 
         with stats.duration('test'):
+            print(f"cuurrreeeeeeeeennnnt rules{self.current_rules}")
             conf_matrix = self.tester.test(self.current_rules)
         log.debug(f"Confusion matrix: {conf_matrix}")
 
@@ -275,13 +254,12 @@ class FlowerClient(fl.client.NumPyClient):
         # Encode and return as ints
         self.encoded_outcome = self.encode_outcome(outcome)
         num_examples = settings.num_pos + settings.num_neg
-        log.info(f"🔹 Outcome: {outcome} → Encoded: {self.encoded_outcome}")
+        log.info(f"Outcome: {outcome} → Encoded: {self.encoded_outcome}")
         return [np.array(self.encoded_outcome, dtype=np.int64)], num_examples, {}
 
 
     def evaluate(self, parameters, config):
         """Return loss, num_examples, metrics."""
-        is_final = config.get("final_evaluation", False)
         self.set_parameters(parameters)
         if not self.current_rules:
             log.warning("No rules to evaluate! Skipping.")
@@ -301,15 +279,12 @@ class FlowerClient(fl.client.NumPyClient):
 
         
         log.info(f" current rules: {self.current_rules}, Eval: cm={conf_matrix}, acc={accuracy:.4f}, recall={recall:.4f}")
-    
         #save_client_result(client_id=CLIENT_ID,dataset_name=kbpath,rules=self.current_rules,conf_matrix=conf_matrix)
         return float(1 - accuracy), num_examples, {"accuracy": float(accuracy)}
 
 
-
-
-# 🔹 Start the client
+#Start the client
 fl.client.start_client(
     server_address="localhost:8080",
-    client=FlowerClient(tester).to_client(),  # ✅ Fixed Flower API usage
+    client=FlowerClient(tester,stats).to_client(),  # Fixed Flower API usage
 )

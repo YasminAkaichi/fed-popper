@@ -22,9 +22,11 @@
 
 
 
-max_clauses(2).
+
+max_clauses(3).
 max_vars(5).
-max_body(7).
+max_body(6).
+
 
 head_pred(f,1).
 body_pred(has_car,2).
