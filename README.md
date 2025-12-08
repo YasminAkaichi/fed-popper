@@ -4,7 +4,7 @@ To run FedPopper, follow the steps below:
 
 # 1. Clone this repository
 
-git clone https://github.com/<your-user>/fed-popper.git
+git clone https://github.com/YasminAkaichi/fed-popper.git
 cd fed-popper
 
 
@@ -12,10 +12,11 @@ cd fed-popper
 FedPopper relies on a custom extension of Flower adapted for symbolic learning.
 Install it directly from our GitHub fork:
 
-pip install git+https://github.com/<your-user>/flower-fedpopper.git
+pip install git+https://github.com/YasminAkaichi/flower.git
 
 
-(No additional cloning of Flower is required.)
+(No additional cloning of Flower is required unless you want to see the aggregator, the constrainer and the generator on the server side)
+you need to clone the github and the files you need to check are located in the folder  flwr/src/py/flwr/server/strategy/ in the two files: aggregate.py and the fedpopper.py
 
 # 3. Navigate to the FedPopper directory
 
