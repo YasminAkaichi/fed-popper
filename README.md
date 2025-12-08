@@ -81,7 +81,7 @@ bk.pl — background knowledge
 
 bias.pl — predicate declarations and structural limits
 
-You may swap any dataset into any client configuration by adjusting the DATA_PATH in the client code.
+You may change any dataset into any client configuration by adjusting the kbpath in the client code.
 
 # Notes
 
