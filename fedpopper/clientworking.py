@@ -22,7 +22,7 @@ logging.basicConfig(level=logging.DEBUG)
 log = logging.getLogger(__name__)
 
 #Load dataset
-kbpath = "/Users/yasmineakaichi/fed-popper/fedpopper/trains_part3"
+kbpath = "/Users/yasmineakaichi/fed-popper/fedpopper/trains_part1"
 bk_file, ex_file, bias_file = load_kbpath(kbpath)
 
 #Initialize ILP settings
@@ -32,7 +32,7 @@ stats = Stats(log_best_programs=settings.info)
 settings.num_pos, settings.num_neg = len(tester.pos), len(tester.neg)
 best_score = None
 import re
-CLIENT_ID = 3
+CLIENT_ID = 1
 def parse_clause(code: str):
     """Convert a Prolog-style rule back into (head, body) tuple."""
     
@@ -174,9 +174,9 @@ class FlowerClient(fl.client.NumPyClient):
         self.current_rules = None  # Store current hypothesis
         self.encoded_outcome = None  # Store encoded outcome as (E+, E-)
         self.best_score = None  # <- track across rounds if you want
+        self.score = None
         self.local_records = [] 
         self.stats = stats
-        self.score = None
     def encode_outcome(self, outcome):
         norm = (outcome[0].upper(), outcome[1].upper())
         return (OUTCOME_ENCODING[norm[0]], OUTCOME_ENCODING[norm[1]])
@@ -196,6 +196,7 @@ class FlowerClient(fl.client.NumPyClient):
         # combine outcome + score into a single array 
         outcome_array = np.array([self.encode_outcome[0],self.encode_outcome[1],self.score if self.score is not None else 0.0], dtype= np.float32)
         return [outcome_array]
+        #return [np.array(self.encoded_outcome, dtype=np.int64)]
 
     def set_parameters(self, parameters):
         """Receive rules from server and parse to Popper (Clause, Literal)."""
@@ -253,7 +254,7 @@ class FlowerClient(fl.client.NumPyClient):
         stats.register_program(self.current_rules, conf_matrix)
 
         if self.best_score is None or self.score > self.best_score:
-            self.best_score = self.score
+            self.best_score = score
             if outcome == (Outcome.ALL, Outcome.NONE):
                 stats.register_solution(self.current_rules, conf_matrix)
             stats.register_best_program(self.current_rules, conf_matrix)
@@ -262,12 +263,7 @@ class FlowerClient(fl.client.NumPyClient):
         self.encoded_outcome = self.encode_outcome(outcome)
         num_examples = settings.num_pos + settings.num_neg
         log.info(f"Outcome: {outcome} → Encoded: {self.encoded_outcome}")
-        #return [np.array(self.encoded_outcome, dtype=np.int64)], num_examples, {}
-        payload = np.array(
-    [int(self.encoded_outcome[0]), int(self.encoded_outcome[1]), float(self.score)],
-    dtype=np.float64
-)
-        return [payload], num_examples, {}
+        return [np.array(self.encoded_outcome, dtype=np.int64)], num_examples, {}
 
 
     def evaluate(self, parameters, config):

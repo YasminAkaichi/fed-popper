@@ -17,7 +17,7 @@ from popper.asp import ClingoGrounder, ClingoSolver
 # Create strategy with configuration
 
 # Load ILP settings
-kbpath = "/Users/yasmineakaichi/fed-popper/fedpopper/trains2"
+kbpath = "/Users/yasmineakaichi/fed-popper/fedpopper/trains"
 # on lit seulement le BIAS.pl pas les données
 _, _, bias_file = load_kbpath(kbpath)
 settings = Settings(bias_file,None, None)
@@ -37,7 +37,7 @@ myconstrainer = Constrain()
 #settings.num_pos, settings.num_neg = (5,5)
 #len(mytester.pos), len(mytester.neg)
 
-
+number_rounds = 15000
 strategy = FedPopper(
     settings = settings,
     stats = mystats,
@@ -51,7 +51,9 @@ strategy = FedPopper(
     min_available_clients=3,
     min_evaluate_clients= 3,
     fit_metrics_aggregation_fn=None,
+    total_rounds = 15000,
 )
+
 
 log(DEBUG, "Starting Flower server with FedILP strategy.")
 # Start Flower server for three rounds of federated learning

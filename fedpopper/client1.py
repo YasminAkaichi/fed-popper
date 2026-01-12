@@ -174,6 +174,7 @@ class FlowerClient(fl.client.NumPyClient):
         self.current_rules = None  # Store current hypothesis
         self.encoded_outcome = None  # Store encoded outcome as (E+, E-)
         self.best_score = None  # <- track across rounds if you want
+        self.score = None
         self.local_records = [] 
         self.stats = stats
     def encode_outcome(self, outcome):
@@ -184,11 +185,18 @@ class FlowerClient(fl.client.NumPyClient):
         return (OUTCOME_DECODING[int(enc[0])], OUTCOME_DECODING[int(enc[1])])
 
     def get_parameters(self, config):
-        # Send last computed (E+,E-) (encoded as ints)
+        """
+        D Return (E+, E-, score) as a NumPy array.
+        First 2 entries: outcome encoding
+        Third entry: score
+        """
         if self.encoded_outcome is None:
             log.warning("No computed outcome yet, sending empty array.")
             return [np.array([], dtype=np.int64)]
-        return [np.array(self.encoded_outcome, dtype=np.int64)]
+        # combine outcome + score into a single array 
+        outcome_array = np.array([self.encode_outcome[0],self.encode_outcome[1],self.score if self.score is not None else 0.0], dtype= np.float32)
+        return [outcome_array]
+        #return [np.array(self.encoded_outcome, dtype=np.int64)]
 
     def set_parameters(self, parameters):
         """Receive rules from server and parse to Popper (Clause, Literal)."""
@@ -242,11 +250,11 @@ class FlowerClient(fl.client.NumPyClient):
         log.debug(f"Confusion matrix: {conf_matrix}")
 
         outcome = decide_outcome(conf_matrix)
-        score = calc_score(conf_matrix)
+        self.score = calc_score(conf_matrix)
         stats.register_program(self.current_rules, conf_matrix)
 
-        if self.best_score is None or score > self.best_score:
-            self.best_score = score
+        if self.best_score is None or self.score > self.best_score:
+            self.best_score = self.score
             if outcome == (Outcome.ALL, Outcome.NONE):
                 stats.register_solution(self.current_rules, conf_matrix)
             stats.register_best_program(self.current_rules, conf_matrix)
@@ -255,7 +263,14 @@ class FlowerClient(fl.client.NumPyClient):
         self.encoded_outcome = self.encode_outcome(outcome)
         num_examples = settings.num_pos + settings.num_neg
         log.info(f"Outcome: {outcome} → Encoded: {self.encoded_outcome}")
-        return [np.array(self.encoded_outcome, dtype=np.int64)], num_examples, {}
+        #return [np.array(self.encoded_outcome, dtype=np.int64)], num_examples, {}
+        payload = np.array(
+    [int(self.encoded_outcome[0]), int(self.encoded_outcome[1]), float(self.score)],
+    dtype=np.float64
+)
+
+        return [payload], num_examples, {}
+
 
 
     def evaluate(self, parameters, config):
