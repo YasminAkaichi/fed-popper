@@ -29,8 +29,13 @@ pip install --upgrade pip
 ```bash
 pip install -r requirements.txt
 ```
+## 4. Install Popper v-1.1.0
 
-## 4. Install the customized Flower framework
+```bash
+pip install -e . 
+```
+
+## 5. Install the customized Flower framework
 
 The customized Flower framework required to run FedPopper is included
 in this repository under `external/flower/` and must be installed locally.
@@ -42,7 +47,7 @@ pip install -e .
 cd ../../
 ```
 
-## 5. Run FedPopper (3 clients)
+## 6. Run FedPopper (3 clients)
 cd fedpopper
 
 
@@ -64,7 +69,7 @@ To test another dataset/partition, modify that variable in the corresponding cli
 
 Default setup: Trains dataset partitioned into three balanced subsets.
 
-## 6. Run FedPopper (2 clients) — optional
+## 7. Run FedPopper (2 clients) — optional
 cd fedpopper-2clients
 
 
@@ -80,7 +85,7 @@ Clients:
 python client1.py
 python client2.py
 ```
-## 7. Dataset structure
+## 8. Dataset structure
 
 Datasets are located under:
 
@@ -98,13 +103,13 @@ bk.pl — background knowledge
 
 bias.pl — declarations and structural limits
 
-## 8. Notes
+## 9. Notes
 
 Start the server first, then launch clients in parallel.
 
 The system prints progress round-by-round until a globally correct hypothesis is found.
 
-## 9. Reproducibility notice
+## 10. Reproducibility notice
 
 FedPopper inherits Popper’s operational non-determinism: the underlying ASP solver may explore different valid search branches across runs.
 It may occasionally be necessary to run the system multiple times to obtain the same final hypothesis. This reflects solver heuristics rather than configuration issues.
