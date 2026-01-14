@@ -264,10 +264,7 @@ class FlowerClient(fl.client.NumPyClient):
         num_examples = settings.num_pos + settings.num_neg
         log.info(f"Outcome: {outcome} → Encoded: {self.encoded_outcome}")
         #return [np.array(self.encoded_outcome, dtype=np.int64)], num_examples, {}
-        payload = np.array(
-    [int(self.encoded_outcome[0]), int(self.encoded_outcome[1]), float(self.score)],
-    dtype=np.float64
-)
+        payload = np.array([int(self.encoded_outcome[0]), int(self.encoded_outcome[1]), float(self.score)],dtype=np.float64)
 
         return [payload], num_examples, {}
 

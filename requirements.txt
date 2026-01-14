@@ -1,0 +1,5 @@
+numpy
+pysat
+bitarray
+janus-swi
+setuptools
