@@ -51,13 +51,15 @@ cd fedpopper
 Open four terminals.
 
 Terminal 1 (Server)
+```bash
 python server.py
-
+```
 Terminals 2–4 (Clients)
+```bash
 python client1.py
 python client2.py
 python client3.py
-
+```
 
 Each client file contains a DATA_PATH (or equivalent) variable pointing to its local dataset partition.
 To test another dataset/partition, modify that variable in the corresponding client file.
@@ -71,15 +73,15 @@ cd fedpopper-2clients
 Open three terminals.
 
 Server:
-
+```bash
 python server.py
-
+```
 
 Clients:
-
+```bash
 python client1.py
 python client2.py
-
+```
 ## 7. Dataset structure
 
 Datasets are located under:
