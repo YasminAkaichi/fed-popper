@@ -35,8 +35,6 @@ pip install -r requirements.txt
 The customized Flower framework required to run FedPopper is included
 in this repository under `external/flower/` and must be installed locally.
 
-external/flower/
-
 Install it in editable mode:
 ```bash
 cd external/flower
