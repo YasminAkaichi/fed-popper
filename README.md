@@ -6,7 +6,7 @@ with the exact customized version of the Flower framework used in the experiment
 All instructions below have been tested on Python ≥ 3.9.
 
 
-##  0. System requirements
+##  1. System requirements
 
 FedPopper relies on Popper and Answer Set Programming solvers.
 The following system dependencies must be installed before running the artefact:
@@ -17,7 +17,7 @@ The following system dependencies must be installed before running the artefact:
 These tools are required by Popper and are not Python packages.
 
 
-## 1. Environment setup
+## 2. Environment setup
 
 Create and activate a virtual environment:
 
@@ -25,12 +25,12 @@ python3 -m venv fedpopper-env
 source fedpopper-env/bin/activate
 pip install --upgrade pip
 
-## 2.Install dependencies
+## 3.Install dependencies
 
 pip install -r requirements.txt
 
 
-## 3. Install the customized Flower framework
+## 4. Install the customized Flower framework
 
 The customized Flower framework required to run FedPopper is included
 in this repository under `external/flower/` and must be installed locally.
@@ -44,7 +44,7 @@ pip install -e .
 cd ../../
 
 
-## 4. Run FedPopper (3 clients)
+## 5. Run FedPopper (3 clients)
 cd fedpopper
 
 
@@ -64,7 +64,7 @@ To test another dataset/partition, modify that variable in the corresponding cli
 
 Default setup: Trains dataset partitioned into three balanced subsets.
 
-## 5. Run FedPopper (2 clients) — optional
+## 6. Run FedPopper (2 clients) — optional
 cd fedpopper-2clients
 
 
@@ -80,7 +80,7 @@ Clients:
 python client1.py
 python client2.py
 
-## 6. Dataset structure
+## 7. Dataset structure
 
 Datasets are located under:
 
@@ -98,13 +98,13 @@ bk.pl — background knowledge
 
 bias.pl — declarations and structural limits
 
-## 7. Notes
+## 8. Notes
 
 Start the server first, then launch clients in parallel.
 
 The system prints progress round-by-round until a globally correct hypothesis is found.
 
-8) Reproducibility notice
+## 9. Reproducibility notice
 
 FedPopper inherits Popper’s operational non-determinism: the underlying ASP solver may explore different valid search branches across runs.
 It may occasionally be necessary to run the system multiple times to obtain the same final hypothesis. This reflects solver heuristics rather than configuration issues.
