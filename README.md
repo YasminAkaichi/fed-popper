@@ -24,11 +24,11 @@ Create and activate a virtual environment:
 python3 -m venv fedpopper-env
 source fedpopper-env/bin/activate
 pip install --upgrade pip
-
+```
 ## 3.Install dependencies
 ```bash
 pip install -r requirements.txt
-
+```
 
 ## 4. Install the customized Flower framework
 
@@ -42,7 +42,7 @@ Install it in editable mode:
 cd external/flower
 pip install -e .
 cd ../../
-
+```
 
 ## 5. Run FedPopper (3 clients)
 cd fedpopper
