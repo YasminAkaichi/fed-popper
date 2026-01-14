@@ -25,7 +25,7 @@ python3 -m venv fedpopper-env
 source fedpopper-env/bin/activate
 pip install --upgrade pip
 ```
-## 3.Install dependencies
+## 3. Install dependencies
 ```bash
 pip install -r requirements.txt
 ```
@@ -48,8 +48,9 @@ cd ../../
 ```
 
 ## 6. Run FedPopper (3 clients)
+```bash
 cd fedpopper
-
+```
 
 Open four terminals.
 
