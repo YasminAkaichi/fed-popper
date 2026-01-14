@@ -20,13 +20,13 @@ These tools are required by Popper and are not Python packages.
 ## 2. Environment setup
 
 Create and activate a virtual environment:
-
+```bash
 python3 -m venv fedpopper-env
 source fedpopper-env/bin/activate
 pip install --upgrade pip
 
 ## 3.Install dependencies
-
+```bash
 pip install -r requirements.txt
 
 
@@ -38,7 +38,7 @@ in this repository under `external/flower/` and must be installed locally.
 external/flower/
 
 Install it in editable mode:
-
+```bash
 cd external/flower
 pip install -e .
 cd ../../
