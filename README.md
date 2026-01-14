@@ -1,100 +1,113 @@
 # Reproducibility and Execution Instructions
 
-To run FedPopper, follow the steps below:
+This artefact provides a self-contained implementation of FedPopper together
+with the exact customized version of the Flower framework used in the experiments.
 
-# 1. Clone this repository
-
-git clone https://github.com/YasminAkaichi/fed-popper.git
-cd fed-popper
+All instructions below have been tested on Python ≥ 3.9.
 
 
-# 2. Install the modified Flower version
-FedPopper relies on a custom extension of Flower adapted for symbolic learning.
-Install it directly from our GitHub fork:
+##  0. System requirements
 
-pip install git+https://github.com/YasminAkaichi/flower.git
+FedPopper relies on Popper and Answer Set Programming solvers.
+The following system dependencies must be installed before running the artefact:
+
+- SWI-Prolog (version ≥ 9.2.0)
+- Clingo (version ≥ 5.6.2)
+
+These tools are required by Popper and are not Python packages.
 
 
-(No additional cloning of Flower is required unless you want to see the aggregator, the constrainer and the generator on the server side)
-you need to clone the github and the files you need to check are located in the folder  flwr/src/py/flwr/server/strategy/ in the two files: aggregate.py and the fedpopper.py
+## 1. Environment setup
 
-# 3. Navigate to the FedPopper directory
+Create and activate a virtual environment:
 
+python3 -m venv fedpopper-env
+source fedpopper-env/bin/activate
+pip install --upgrade pip
+
+## 2.Install dependencies
+
+pip install -r requirements.txt
+
+
+## 3. Install the customized Flower framework
+
+The customized Flower framework required to run FedPopper is included
+in this repository under `external/flower/` and must be installed locally.
+
+external/flower/
+
+Install it in editable mode:
+
+cd external/flower
+pip install -e .
+cd ../../
+
+
+## 4. Run FedPopper (3 clients)
 cd fedpopper
 
 
-# 4. Run the system using four terminals
+Open four terminals.
 
-Terminal 1 — Server
+Terminal 1 (Server)
+python server.py
 
-python3 server.py
-
-
-Terminals 2–4 — Clients
-
-python3 client1.py
-python3 client2.py
-python3 client3.py
+Terminals 2–4 (Clients)
+python client1.py
+python client2.py
+python client3.py
 
 
-Each client script specifies the path to its local dataset.
-If you wish to test different datasets, you only need to update the DATA_PATH variable inside the corresponding client file.
+Each client file contains a DATA_PATH (or equivalent) variable pointing to its local dataset partition.
+To test another dataset/partition, modify that variable in the corresponding client file.
 
-The default configuration uses the Trains dataset partitioned into three balanced local subsets.
+Default setup: Trains dataset partitioned into three balanced subsets.
 
-# Running FedPopper with Two Clients (optional)
-
-For smaller experiments or quick validation (on two clients):
-
+## 5. Run FedPopper (2 clients) — optional
 cd fedpopper-2clients
 
 
-Launch three terminals:
+Open three terminals.
 
 Server:
 
-python3 server.py
+python server.py
 
 
-Two clients:
+Clients:
 
-python3 client1.py
-python3 client2.py
+python client1.py
+python client2.py
 
+## 6. Dataset structure
 
-This setup is pre-configured with the Trains dataset partitioned into two balanced parts.
+Datasets are located under:
 
-📂 Dataset Structure
-
-All datasets are located inside the repository under:
-
-fedpopper/trains 
-/trains_part1
-/trains_part2
-/trains_part3 
+fedpopper/trains/
+  trains_part1/
+  trains_part2/
+  trains_part3/
 
 
-Each dataset folder contains:
+Each folder contains:
 
 exs.pl — positive & negative examples
 
 bk.pl — background knowledge
 
-bias.pl — predicate declarations and structural limits
+bias.pl — declarations and structural limits
 
-You may change any dataset into any client configuration by adjusting the kbpath in the client code.
+## 7. Notes
 
-# Notes
+Start the server first, then launch clients in parallel.
 
-Always start the server first, then launch clients in parallel.
+The system prints progress round-by-round until a globally correct hypothesis is found.
 
-The system displays progress round-by-round until a globally correct hypothesis is found
+8) Reproducibility notice
+
+FedPopper inherits Popper’s operational non-determinism: the underlying ASP solver may explore different valid search branches across runs.
+It may occasionally be necessary to run the system multiple times to obtain the same final hypothesis. This reflects solver heuristics rather than configuration issues.
 
 
-# ⚠️ Reproducibility Notice
 
-FedPopper inherits Popper’s operational non-determinism:
-the underlying ASP solver may explore different valid search branches across executions.
-For this reason, you may occasionally need to run FedPopper 2–3 times before obtaining the same final hypothesis reported in our experiments.
-
-This does not indicate a configuration error, it simply reflects the solver’s internal heuristics and the dependency of the search trajectory on the order of failures encountered during learning.
