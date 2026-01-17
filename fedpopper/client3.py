@@ -25,8 +25,8 @@ log = logging.getLogger(__name__)
 #kbpath = "iggp-rps_part3"
 
 #kbpath = "/Users/yasmineakaichi/fed-popper/fedpopper/zendo1_part2"
-#kbpath = "/Users/yasmineakaichi/fed-popper/fedpopper/iggp-rps_part1"
 kbpath = "/Users/yasmineakaichi/fed-popper/fedpopper/trains_part3"
+#kbpath = "/Users/yasmineakaichi/fed-popper/fedpopper/iggp-rps_part3"
 bk_file, ex_file, bias_file = load_kbpath(kbpath)
 
 # Initialize ILP settings
@@ -307,23 +307,22 @@ class FlowerClient(fl.client.NumPyClient):
 
 
     def evaluate(self, parameters, config):
-        """Return loss, num_examples, metrics."""
-        is_final = config.get("final_evaluation", False)
         self.set_parameters(parameters)
+
         if not self.current_rules:
             log.warning("No rules to evaluate! Skipping.")
             return 1.0, 0, {"accuracy": 0.0}
 
         conf_matrix = self.tester.test(self.current_rules)
-        
-        total = sum(conf_matrix) if sum(conf_matrix) > 0 else 1
-        accuracy = (conf_matrix[0] + conf_matrix[2]) / total
-        recall = (conf_matrix[0]) / (conf_matrix[0] + conf_matrix[1])
-        num_examples = sum(conf_matrix)
+        tp, fn, tn, fp = conf_matrix
+
+        total = tp + fn + tn + fp
+        accuracy = (tp + tn) / total if total > 0 else 0.0
+        recall = tp / (tp + fn) if (tp + fn) > 0 else 0.0
 
         log.info(f"Eval: cm={conf_matrix}, acc={accuracy:.4f}, recall={recall:.4f}")
-        #save_client_result(client_id=CLIENT_ID,dataset_name=kbpath,rules=self.current_rules,conf_matrix=conf_matrix)
-        return float(1 - accuracy), num_examples, {"accuracy": float(accuracy)}
+
+        return float(1 - accuracy), total, {"accuracy": float(accuracy)}
 
 
 
