@@ -18,6 +18,10 @@ from popper.asp import ClingoGrounder, ClingoSolver
 
 # Load ILP settings
 kbpath = "/Users/yasmineakaichi/fed-popper/fedpopper/trains"
+#kbpath = "/Users/yasmineakaichi/fed-popper/fedpopper/iggp-rps"
+
+#kbpath = "/Users/yasmineakaichi/fed-popper/fedpopper/trains"
+
 # on lit seulement le BIAS.pl pas les données
 _, _, bias_file = load_kbpath(kbpath)
 settings = Settings(bias_file,None, None)
@@ -51,7 +55,6 @@ strategy = FedPopper(
     min_available_clients=3,
     min_evaluate_clients= 3,
     fit_metrics_aggregation_fn=None,
-    total_rounds = 15000,
 )
 
 

@@ -264,7 +264,7 @@ class FlowerClient(fl.client.NumPyClient):
         num_examples = settings.num_pos + settings.num_neg
         log.info(f"Outcome: {outcome} → Encoded: {self.encoded_outcome}")
         return [np.array(self.encoded_outcome, dtype=np.int64)], num_examples, {}
-
+    
 
     def evaluate(self, parameters, config):
         """Return loss, num_examples, metrics."""

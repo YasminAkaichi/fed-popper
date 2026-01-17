@@ -13,19 +13,23 @@ from popper.core import Literal
 import pandas as pd 
 
 GLOBAL_CSV_PATH = "fedpopper_results_global.csv"
-CSV_FILE = "fedpopper_results_client1.csv"
-#Outcome Encoding
+CSV_FILE = "fedpopper_results_client2.csv"
+# Outcome Encoding
 OUTCOME_ENCODING = {"ALL": 1, "SOME": 2, "NONE": 3}
 OUTCOME_DECODING = {1: "ALL", 2: "SOME", 3: "NONE"}
-#Logging Setup
+# Logging Setup
 logging.basicConfig(level=logging.DEBUG)
 log = logging.getLogger(__name__)
 
-#Load dataset
+# Load dataset
+#kbpath = "iggp-rps_part3"
+
+#kbpath = "/Users/yasmineakaichi/fed-popper/fedpopper/zendo1_part2"
+#kbpath = "/Users/yasmineakaichi/fed-popper/fedpopper/iggp-rps_part1"
 kbpath = "/Users/yasmineakaichi/fed-popper/fedpopper/trains_part3"
 bk_file, ex_file, bias_file = load_kbpath(kbpath)
 
-#Initialize ILP settings
+# Initialize ILP settings
 settings = Settings(bias_file, ex_file, bk_file)
 tester = Tester(settings)
 stats = Stats(log_best_programs=settings.info)
@@ -67,10 +71,10 @@ def transform_rule_to_tester_format(rule_str):
         #Fix: Properly extract body literals using regex
         body_literals = re.findall(r'\w+\(.*?\)', body_str)
 
-        log.debug(f"Parsed head: {head_str}")
+        log.debug(f" Parsed head: {head_str}")
         log.debug(f"Parsed body literals: {body_literals}")
 
-        #Convert to Literal objects (assuming `Literal.from_string` exists)
+        # Convert to Literal objects (assuming `Literal.from_string` exists)
         head = Literal.from_string(head_str)
         body = tuple(Literal.from_string(lit) for lit in body_literals)
 
@@ -164,7 +168,7 @@ def save_client_result(client_id, dataset_name, rules, conf_matrix):
         writer.writeheader()
         writer.writerows(rows)
 
-    print(f"📌 Updated (client={client_id}, dataset={dataset_name}) in {CSV_FILE}")
+    print(f"Updated (client={client_id}, dataset={dataset_name}) in {CSV_FILE}")
 
 
 class FlowerClient(fl.client.NumPyClient):
@@ -176,7 +180,6 @@ class FlowerClient(fl.client.NumPyClient):
         self.best_score = None  # <- track across rounds if you want
         self.local_records = [] 
         self.stats = stats
-        self.score = None
     def encode_outcome(self, outcome):
         norm = (outcome[0].upper(), outcome[1].upper())
         return (OUTCOME_ENCODING[norm[0]], OUTCOME_ENCODING[norm[1]])
@@ -184,18 +187,18 @@ class FlowerClient(fl.client.NumPyClient):
     def decode_outcome(self, enc):
         return (OUTCOME_DECODING[int(enc[0])], OUTCOME_DECODING[int(enc[1])])
 
+    """
     def get_parameters(self, config):
-        """
-        D Return (E+, E-, score) as a NumPy array.
-        First 2 entries: outcome encoding
-        Third entry: score
-        """
+        # Send last computed (E+,E-) (encoded as ints)
         if self.encoded_outcome is None:
             log.warning("No computed outcome yet, sending empty array.")
             return [np.array([], dtype=np.int64)]
-        # combine outcome + score into a single array 
-        outcome_array = np.array([self.encode_outcome[0],self.encode_outcome[1],self.score if self.score is not None else 0.0], dtype= np.float32)
-        return [outcome_array]
+        return [np.array(self.encoded_outcome, dtype=np.int64)]
+    """
+    def get_parameters(self, config):
+    # Flower API requires this, but Popper doesn't use it
+        return [np.array([], dtype=np.int64)]
+    
 
     def set_parameters(self, parameters):
         """Receive rules from server and parse to Popper (Clause, Literal)."""
@@ -211,7 +214,7 @@ class FlowerClient(fl.client.NumPyClient):
 
         # (2) Si ce ne sont PAS des strings → ce ne sont PAS des règles
         if arr.dtype.kind not in ["U", "S", "O"]: 
-            log.debug("Received parameters are NOT rules (maybe outcomes). Skipping update.")
+            log.debug(" Received parameters are NOT rules (maybe outcomes). Skipping update.")
             self.current_rules = []
             return
 
@@ -227,18 +230,18 @@ class FlowerClient(fl.client.NumPyClient):
             log.debug(f"Parsed hypothesis: {self.current_rules}")
 
         except Exception as e:
-            log.error(f"Error processing received rules: {e}")
+            log.error(f" Error processing received rules: {e}")
             self.current_rules = []
     
+  
 
-
-    
+    """
     def fit(self, parameters, config):
-        """Test rules locally, compute local outcome (E+,E-), send encoded."""
+        Test rules locally, compute local outcome (E+,E-), send encoded.
         self.set_parameters(parameters)
 
         if not self.current_rules:
-            log.warning("No rules available! Sending default outcome (NONE,NONE).")
+            log.warning(" No rules available! Sending default outcome (NONE,NONE).")
             self.encoded_outcome = (OUTCOME_ENCODING["NONE"], OUTCOME_ENCODING["NONE"])
             num_examples = settings.num_pos + settings.num_neg
             return [np.array(self.encoded_outcome, dtype=np.int64)], num_examples, {}
@@ -249,11 +252,11 @@ class FlowerClient(fl.client.NumPyClient):
         log.debug(f"Confusion matrix: {conf_matrix}")
 
         outcome = decide_outcome(conf_matrix)
-        self.score = calc_score(conf_matrix)
+        score = calc_score(conf_matrix)
         stats.register_program(self.current_rules, conf_matrix)
 
-        if self.best_score is None or self.score > self.best_score:
-            self.best_score = self.score
+        if self.best_score is None or score > self.best_score:
+            self.best_score = score
             if outcome == (Outcome.ALL, Outcome.NONE):
                 stats.register_solution(self.current_rules, conf_matrix)
             stats.register_best_program(self.current_rules, conf_matrix)
@@ -261,17 +264,51 @@ class FlowerClient(fl.client.NumPyClient):
         # Encode and return as ints
         self.encoded_outcome = self.encode_outcome(outcome)
         num_examples = settings.num_pos + settings.num_neg
-        log.info(f"Outcome: {outcome} → Encoded: {self.encoded_outcome}")
-        #return [np.array(self.encoded_outcome, dtype=np.int64)], num_examples, {}
-        payload = np.array(
-    [int(self.encoded_outcome[0]), int(self.encoded_outcome[1]), float(self.score)],
-    dtype=np.float64
-)
-        return [payload], num_examples, {}
+        log.info(f" Outcome: {outcome} → Encoded: {self.encoded_outcome}")
+        return [np.array(self.encoded_outcome, dtype=np.int64)], num_examples, {}
+        """ 
+    def fit(self, parameters, config):
+        round_id = config.get("round", -1)
+        print("\n" + "="*60)
+        print(f"🧠 CLIENT {CLIENT_ID} — ROUND {round_id}")
+        print("="*60)
+
+        self.set_parameters(parameters)
+
+        # --- Cas : aucune règle reçue ---
+        if not self.current_rules:
+            print("Aucune hypothèse reçue du serveur.")
+            conf_matrix = (0, 0, 0, 0)
+            return [np.array(conf_matrix, dtype=np.int64)], 0, {}
+
+        # --- Afficher l’hypothèse reçue ---
+        print("Hypothèse reçue :")
+        for r in self.current_rules:
+            print("   ", Clause.to_code(r))
+
+        # --- Test local ---
+        conf_matrix = self.tester.test(self.current_rules)
+        tp, fn, tn, fp = conf_matrix
+
+        print("Résultat local :")
+        print(f"   TP={tp} | FN={fn} | TN={tn} | FP={fp}")
+
+        # --- Diagnostic local ---
+        if fn == 0 and fp == 0:
+            print("Localement : règle parfaite (ALL, NONE)")
+        elif fn > 0 and tp == 0:
+            print("Localement : règle inutile (NONE, ?)")
+        else:
+            print("Localement : règle partielle (SOME)")
+
+        print("="*60)
+
+        return [np.array(conf_matrix, dtype=np.int64)], (tp + fn + tn + fp), {}
 
 
     def evaluate(self, parameters, config):
         """Return loss, num_examples, metrics."""
+        is_final = config.get("final_evaluation", False)
         self.set_parameters(parameters)
         if not self.current_rules:
             log.warning("No rules to evaluate! Skipping.")
@@ -281,21 +318,17 @@ class FlowerClient(fl.client.NumPyClient):
         
         total = sum(conf_matrix) if sum(conf_matrix) > 0 else 1
         accuracy = (conf_matrix[0] + conf_matrix[2]) / total
-        tp, fn, tn, fp = conf_matrix
-        total = tp + fn + tn + fp if (tp + fn + tn + fp) > 0 else 1
-
-        accuracy = (tp + tn) / total
-        recall = tp / (tp + fn) if (tp + fn) > 0 else 0
+        recall = (conf_matrix[0]) / (conf_matrix[0] + conf_matrix[1])
         num_examples = sum(conf_matrix)
 
-
-        
-        log.info(f" current rules: {self.current_rules}, Eval: cm={conf_matrix}, acc={accuracy:.4f}, recall={recall:.4f}")
+        log.info(f"Eval: cm={conf_matrix}, acc={accuracy:.4f}, recall={recall:.4f}")
         #save_client_result(client_id=CLIENT_ID,dataset_name=kbpath,rules=self.current_rules,conf_matrix=conf_matrix)
         return float(1 - accuracy), num_examples, {"accuracy": float(accuracy)}
 
 
-#Start the client
+
+
+# Start the client
 fl.client.start_client(
     server_address="localhost:8080",
     client=FlowerClient(tester,stats).to_client(),  # Fixed Flower API usage

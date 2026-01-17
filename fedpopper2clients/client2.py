@@ -22,7 +22,7 @@ logging.basicConfig(level=logging.DEBUG)
 log = logging.getLogger(__name__)
 
 # Load dataset
-kbpath = "trainspart2"
+kbpath = "zendo1_part2"
 bk_file, ex_file, bias_file = load_kbpath(kbpath)
 
 # Initialize ILP settings
@@ -183,12 +183,18 @@ class FlowerClient(fl.client.NumPyClient):
     def decode_outcome(self, enc):
         return (OUTCOME_DECODING[int(enc[0])], OUTCOME_DECODING[int(enc[1])])
 
+    """
     def get_parameters(self, config):
         # Send last computed (E+,E-) (encoded as ints)
         if self.encoded_outcome is None:
             log.warning("No computed outcome yet, sending empty array.")
             return [np.array([], dtype=np.int64)]
         return [np.array(self.encoded_outcome, dtype=np.int64)]
+    """
+    def get_parameters(self, config):
+    # Flower API requires this, but Popper doesn't use it
+        return [np.array([], dtype=np.int64)]
+    
 
     def set_parameters(self, parameters):
         """Receive rules from server and parse to Popper (Clause, Literal)."""
@@ -223,11 +229,11 @@ class FlowerClient(fl.client.NumPyClient):
             log.error(f" Error processing received rules: {e}")
             self.current_rules = []
     
+  
 
-
-    
+    """
     def fit(self, parameters, config):
-        """Test rules locally, compute local outcome (E+,E-), send encoded."""
+        Test rules locally, compute local outcome (E+,E-), send encoded.
         self.set_parameters(parameters)
 
         if not self.current_rules:
@@ -256,6 +262,45 @@ class FlowerClient(fl.client.NumPyClient):
         num_examples = settings.num_pos + settings.num_neg
         log.info(f" Outcome: {outcome} → Encoded: {self.encoded_outcome}")
         return [np.array(self.encoded_outcome, dtype=np.int64)], num_examples, {}
+        """ 
+    def fit(self, parameters, config):
+        round_id = config.get("round", -1)
+        print("\n" + "="*60)
+        print(f"CLIENT {CLIENT_ID} — ROUND {round_id}")
+        print("="*60)
+
+        self.set_parameters(parameters)
+
+        # --- Cas : aucune règle reçue ---
+        if not self.current_rules:
+            print("Aucune hypothèse reçue du serveur.")
+            conf_matrix = (0, 0, 0, 0)
+            return [np.array(conf_matrix, dtype=np.int64)], 0, {}
+
+        # --- Afficher l’hypothèse reçue ---
+        print("Hypothèse reçue :")
+        for r in self.current_rules:
+            print("   ", Clause.to_code(r))
+
+        # --- Test local ---
+        conf_matrix = self.tester.test(self.current_rules)
+        tp, fn, tn, fp = conf_matrix
+
+        print("Résultat local :")
+        print(f"   TP={tp} | FN={fn} | TN={tn} | FP={fp}")
+
+        # --- Diagnostic local ---
+        if fn == 0 and fp == 0:
+            print("Localement : règle parfaite (ALL, NONE)")
+        elif fn > 0 and tp == 0:
+            print("Localement : règle inutile (NONE, ?)")
+        else:
+            print("Localement : règle partielle (SOME)")
+
+        print("="*60)
+
+        return [np.array(conf_matrix, dtype=np.int64)], (tp + fn + tn + fp), {}
+
 
 
     def evaluate(self, parameters, config):

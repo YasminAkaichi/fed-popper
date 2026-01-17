@@ -17,7 +17,7 @@ from popper.asp import ClingoGrounder, ClingoSolver
 # Create strategy with configuration
 
 # ✅ Load ILP settings
-kbpath = "noisy-alzheimer_acetyl"
+kbpath = "zendo1"
 _, _, bias_file = load_kbpath(kbpath)
 settings = Settings(bias_file,None, None)
 mytester = StructuralTester()
