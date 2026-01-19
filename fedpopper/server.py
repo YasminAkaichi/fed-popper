@@ -17,8 +17,8 @@ from popper.asp import ClingoGrounder, ClingoSolver
 # Create strategy with configuration
 
 # Load ILP settings
-kbpath = "/Users/yasmineakaichi/fed-popper/fedpopper/trains"
-#kbpath = "/Users/yasmineakaichi/fed-popper/fedpopper/iggp-rps"
+#kbpath = "/Users/yasmineakaichi/fed-popper/fedpopper/zendo1"
+kbpath = "/Users/yasmineakaichi/fed-popper/fedpopper/iggp-rps"
 
 #kbpath = "/Users/yasmineakaichi/fed-popper/fedpopper/trains"
 

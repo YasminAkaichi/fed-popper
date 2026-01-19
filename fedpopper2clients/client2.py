@@ -22,7 +22,10 @@ logging.basicConfig(level=logging.DEBUG)
 log = logging.getLogger(__name__)
 
 # Load dataset
-kbpath = "zendo1_part2"
+
+#kbpath = "zendo1_part2"
+kbpath = "/Users/yasmineakaichi/fed-popper/fedpopper2clients/zendo1_part2"
+
 bk_file, ex_file, bias_file = load_kbpath(kbpath)
 
 # Initialize ILP settings
@@ -32,7 +35,7 @@ stats = Stats(log_best_programs=settings.info)
 settings.num_pos, settings.num_neg = len(tester.pos), len(tester.neg)
 best_score = None
 import re
-CLIENT_ID = 1
+CLIENT_ID = 2
 def parse_clause(code: str):
     """Convert a Prolog-style rule back into (head, body) tuple."""
     
@@ -228,100 +231,95 @@ class FlowerClient(fl.client.NumPyClient):
         except Exception as e:
             log.error(f" Error processing received rules: {e}")
             self.current_rules = []
-    
-  
 
-    """
-    def fit(self, parameters, config):
-        Test rules locally, compute local outcome (E+,E-), send encoded.
-        self.set_parameters(parameters)
-
-        if not self.current_rules:
-            log.warning(" No rules available! Sending default outcome (NONE,NONE).")
-            self.encoded_outcome = (OUTCOME_ENCODING["NONE"], OUTCOME_ENCODING["NONE"])
-            num_examples = settings.num_pos + settings.num_neg
-            return [np.array(self.encoded_outcome, dtype=np.int64)], num_examples, {}
-
-        with stats.duration('test'):
-            print(f"cuurrreeeeeeeeennnnt rules{self.current_rules}")
-            conf_matrix = self.tester.test(self.current_rules)
-        log.debug(f"Confusion matrix: {conf_matrix}")
-
-        outcome = decide_outcome(conf_matrix)
-        score = calc_score(conf_matrix)
-        stats.register_program(self.current_rules, conf_matrix)
-
-        if self.best_score is None or score > self.best_score:
-            self.best_score = score
-            if outcome == (Outcome.ALL, Outcome.NONE):
-                stats.register_solution(self.current_rules, conf_matrix)
-            stats.register_best_program(self.current_rules, conf_matrix)
-
-        # Encode and return as ints
-        self.encoded_outcome = self.encode_outcome(outcome)
-        num_examples = settings.num_pos + settings.num_neg
-        log.info(f" Outcome: {outcome} → Encoded: {self.encoded_outcome}")
-        return [np.array(self.encoded_outcome, dtype=np.int64)], num_examples, {}
-        """ 
     def fit(self, parameters, config):
         round_id = config.get("round", -1)
+
         print("\n" + "="*60)
-        print(f"CLIENT {CLIENT_ID} — ROUND {round_id}")
+        print(f"CLIENT {CLIENT_ID}")
         print("="*60)
 
         self.set_parameters(parameters)
 
-        # --- Cas : aucune règle reçue ---
+        # --- Cas : aucune hypothèse ---
         if not self.current_rules:
-            print("Aucune hypothèse reçue du serveur.")
-            conf_matrix = (0, 0, 0, 0)
-            return [np.array(conf_matrix, dtype=np.int64)], 0, {}
+            print("No hypothesis recieved by server.")
+            # ε⁺=NONE, ε⁻=NONE, score=0
+            payload = np.array(
+                [OUTCOME_ENCODING["NONE"], OUTCOME_ENCODING["NONE"], 0],
+                dtype=np.int64
+            )
+            return [payload], 0, {}
 
-        # --- Afficher l’hypothèse reçue ---
-        print("Hypothèse reçue :")
+        # --- Affichage ---
+        print("Received Hypothesis :")
         for r in self.current_rules:
             print("   ", Clause.to_code(r))
 
         # --- Test local ---
-        conf_matrix = self.tester.test(self.current_rules)
-        tp, fn, tn, fp = conf_matrix
+        tp, fn, tn, fp = self.tester.test(self.current_rules)
 
-        print("Résultat local :")
+        print("Local Result :")
         print(f"   TP={tp} | FN={fn} | TN={tn} | FP={fp}")
 
-        # --- Diagnostic local ---
-        if fn == 0 and fp == 0:
-            print("Localement : règle parfaite (ALL, NONE)")
-        elif fn > 0 and tp == 0:
-            print("Localement : règle inutile (NONE, ?)")
+        # --- Outcome local (Popper EXACT) ---
+        outcome = decide_outcome((tp, fn, tn, fp))
+        eps_plus, eps_minus = outcome
+
+        score = tp + tn   # score LOCAL
+
+        #print(f"ε⁺={eps_plus}, ε⁻={eps_minus}, score={score}")
+        print("\n Local Diagnostic (Popper) :")
+
+        if eps_plus == Outcome.ALL and eps_minus == Outcome.NONE:
+            print("Perfect Local Rule (ALL, NONE)")
+        elif eps_plus == Outcome.NONE:
+            print("Useless Local Rule (NONE, ?)")
+        elif eps_plus == Outcome.SOME:
+            print("Parital Local Rule (SOME)")
         else:
-            print("Localement : règle partielle (SOME)")
+            print(f"Local Outcome : ({eps_plus}, {eps_minus})")
+
+        print(f"\nFeedback sent to the server :")
+        print(f"   ε⁺ = {eps_plus}")
+        print(f"   ε⁻ = {eps_minus}")
+        print(f"   score = {score}")
 
         print("="*60)
 
-        return [np.array(conf_matrix, dtype=np.int64)], (tp + fn + tn + fp), {}
+        payload = np.array(
+            [
+                OUTCOME_ENCODING[eps_plus.upper()],
+                OUTCOME_ENCODING[eps_minus.upper()],
+                score
+            ],
+            dtype=np.int64
+        )
 
+        print("="*60)
+
+        # num_examples = score OU 1 (Flower s’en fout ici)
+        return [payload], 1, {}
 
 
     def evaluate(self, parameters, config):
-        """Return loss, num_examples, metrics."""
-        is_final = config.get("final_evaluation", False)
         self.set_parameters(parameters)
+
         if not self.current_rules:
             log.warning("No rules to evaluate! Skipping.")
             return 1.0, 0, {"accuracy": 0.0}
 
         conf_matrix = self.tester.test(self.current_rules)
-        
-        total = sum(conf_matrix) if sum(conf_matrix) > 0 else 1
-        accuracy = (conf_matrix[0] + conf_matrix[2]) / total
-        recall = (conf_matrix[0]) / (conf_matrix[0] + conf_matrix[1])
-        num_examples = sum(conf_matrix)
+        tp, fn, tn, fp = conf_matrix
+
+        total = tp + fn + tn + fp
+        accuracy = (tp + tn) / total if total > 0 else 0.0
+        #recall = tp / (tp + fn) if (tp + fn) > 0 else 0.0
+        recall = tp / (tp + fn) if (tp + fn) > 0 else 0.0
 
         log.info(f"Eval: cm={conf_matrix}, acc={accuracy:.4f}, recall={recall:.4f}")
-        #save_client_result(client_id=CLIENT_ID,dataset_name=kbpath,rules=self.current_rules,conf_matrix=conf_matrix)
-        return float(1 - accuracy), num_examples, {"accuracy": float(accuracy)}
 
+        return float(1 - accuracy), total, {"accuracy": float(accuracy)}
 
 
 
