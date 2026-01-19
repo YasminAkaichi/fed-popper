@@ -104,16 +104,36 @@ bk.pl — background knowledge
 
 bias.pl — declarations and structural limits
 
-## 9. Notes
+## Dataset selection and configuration
 
-Start the server first, then launch clients in parallel.
+Each client file (client1.py, client2.py, client3.py) contains a dataset path variable (e.g., DATA_PATH or kbpath) pointing to its local dataset partition.
 
-The system prints progress round-by-round until a globally correct hypothesis is found.
+Similarly, the server file (server.py) contains a dataset path pointing to the corresponding bias file.
+
+To evaluate a different dataset or partitioning, users should:
+
+locate the predefined dataset paths already present in the code,
+
+comment the currently active path, and
+
+uncomment the desired dataset path.
+
+No additional configuration is required.
+
+Default setup:
+The Trains dataset, partitioned into three balanced subsets
+
+## 9. Execution notes
+
+The server must be started before launching the clients.
+
+Clients should be started in parallel.
+
+The system reports progress round by round until a globally valid hypothesis is found.
 
 ## 10. Reproducibility notice
 
 FedPopper inherits Popper’s operational non-determinism: the underlying ASP solver may explore different valid search branches across runs.
 It may occasionally be necessary to run the system multiple times to obtain the same final hypothesis. This reflects solver heuristics rather than configuration issues.
-
-
+This behaviour is expected and reflects solver heuristics and distributed search dynamics rather than configuration issues or implementation errors.
 
