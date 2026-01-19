@@ -24,7 +24,7 @@ log = logging.getLogger(__name__)
 # Load dataset
 #kbpath = "iggp-rps_part1"
 
-#kbpath = "/Users/yasmineakaichi/fed-popper/fedpopper/zendo1_part2"
+#kbpath = "/Users/yasmineakaichi/fed-popper/fedpopper/zendo1_part1"
 kbpath = "/Users/yasmineakaichi/fed-popper/fedpopper/trains_part1"
 #kbpath = "/Users/yasmineakaichi/fed-popper/fedpopper/iggp-rps_part1"
 
@@ -267,7 +267,7 @@ class FlowerClient(fl.client.NumPyClient):
         num_examples = settings.num_pos + settings.num_neg
         log.info(f" Outcome: {outcome} → Encoded: {self.encoded_outcome}")
         return [np.array(self.encoded_outcome, dtype=np.int64)], num_examples, {}
-        """ 
+         
     def fit(self, parameters, config):
         round_id = config.get("round", -1)
         print("\n" + "="*60)
@@ -305,6 +305,75 @@ class FlowerClient(fl.client.NumPyClient):
         print("="*60)
 
         return [np.array(conf_matrix, dtype=np.int64)], (tp + fn + tn + fp), {}
+        """
+    def fit(self, parameters, config):
+        round_id = config.get("round", -1)
+
+        print("\n" + "="*60)
+        print(f"🧠 CLIENT {CLIENT_ID} — ROUND {round_id}")
+        print("="*60)
+
+        self.set_parameters(parameters)
+
+        # --- Cas : aucune hypothèse ---
+        if not self.current_rules:
+            print("Aucune hypothèse reçue du serveur.")
+            # ε⁺=NONE, ε⁻=NONE, score=0
+            payload = np.array(
+                [OUTCOME_ENCODING["NONE"], OUTCOME_ENCODING["NONE"], 0],
+                dtype=np.int64
+            )
+            return [payload], 0, {}
+
+        # --- Affichage ---
+        print("Hypothèse reçue :")
+        for r in self.current_rules:
+            print("   ", Clause.to_code(r))
+
+        # --- Test local ---
+        tp, fn, tn, fp = self.tester.test(self.current_rules)
+
+        print("Résultat local :")
+        print(f"   TP={tp} | FN={fn} | TN={tn} | FP={fp}")
+
+        # --- Outcome local (Popper EXACT) ---
+        outcome = decide_outcome((tp, fn, tn, fp))
+        eps_plus, eps_minus = outcome
+
+        score = tp + tn   # ✅ score LOCAL
+
+        #print(f"ε⁺={eps_plus}, ε⁻={eps_minus}, score={score}")
+        print("\nDiagnostic local (Popper) :")
+
+        if eps_plus == Outcome.ALL and eps_minus == Outcome.NONE:
+            print("   ✅ Règle parfaite localement (ALL, NONE)")
+        elif eps_plus == Outcome.NONE:
+            print("   ❌ Règle inutile localement (NONE, ?)")
+        elif eps_plus == Outcome.SOME:
+            print("   ⚠️  Règle partielle localement (SOME)")
+        else:
+            print(f"   ℹ️  Outcome local : ({eps_plus}, {eps_minus})")
+
+        print(f"\nRésumé envoyé au serveur :")
+        print(f"   ε⁺ = {eps_plus}")
+        print(f"   ε⁻ = {eps_minus}")
+        print(f"   score = {score}")
+
+        print("="*60)
+
+        payload = np.array(
+            [
+                OUTCOME_ENCODING[eps_plus.upper()],
+                OUTCOME_ENCODING[eps_minus.upper()],
+                score
+            ],
+            dtype=np.int64
+        )
+
+        print("="*60)
+
+        # num_examples = score OU 1 (Flower s’en fout ici)
+        return [payload], 1, {}
 
 
     def evaluate(self, parameters, config):
@@ -319,6 +388,7 @@ class FlowerClient(fl.client.NumPyClient):
 
         total = tp + fn + tn + fp
         accuracy = (tp + tn) / total if total > 0 else 0.0
+        #recall = tp / (tp + fn) if (tp + fn) > 0 else 0.0
         recall = tp / (tp + fn) if (tp + fn) > 0 else 0.0
 
         log.info(f"Eval: cm={conf_matrix}, acc={accuracy:.4f}, recall={recall:.4f}")
