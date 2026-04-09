@@ -117,12 +117,12 @@ class Tester():
 
         return tp, fn, tn, fp
 
-    def is_totally_incomplete(self, rule):
-        if not Clause.is_separable(rule):
-            return False
-        return not any(x in self.success_set([rule]) for x in self.pos)
+    #def is_totally_incomplete(self, rule):
+    #    if not Clause.is_separable(rule):
+    #        return False
+    #    return not any(x in self.success_set([rule]) for x in self.pos)
 
-    def is_inconsistent(self, rule):
-        if not Clause.is_separable(rule):
-            return False
-        return any(x in self.success_set([rule]) for x in self.neg)
+    #def is_inconsistent(self, rule):
+    #    if not Clause.is_separable(rule):
+    #        return False
+    #    return any(x in self.success_set([rule]) for x in self.neg)

@@ -93,19 +93,19 @@ def build_rules(settings, stats, constrainer, tester, program, before, min_claus
     if tester.check_redundant_clause(program):
         rules.update(constrainer.generalisation_constraint(program, before, min_clause))
 
-    if len(program) > 1:
+    #if len(program) > 1:
         # evaluate inconsistent sub-clauses
-        for rule in program:
-            if Clause.is_separable(rule) and tester.is_inconsistent(rule):
-                for x in constrainer.generalisation_constraint([rule], before, min_clause):
-                    rules.add(x)
+    #    for rule in program:
+    #        if Clause.is_separable(rule) and tester.is_inconsistent(rule):
+    #            for x in constrainer.generalisation_constraint([rule], before, min_clause):
+    #                rules.add(x)
 
         # eliminate totally incomplete rules
-        if all(Clause.is_separable(rule) for rule in program):
-            for rule in program:
-                if tester.is_totally_incomplete(rule):
-                    for x in constrainer.redundancy_constraint([rule], before, min_clause):
-                        rules.add(x)
+    #    if all(Clause.is_separable(rule) for rule in program):
+    #        for rule in program:
+    #            if tester.is_totally_incomplete(rule):
+    #                for x in constrainer.redundancy_constraint([rule], before, min_clause):
+    #                    rules.add(x)
 
     stats.register_rules(rules)
 
@@ -151,6 +151,9 @@ def popper(settings, stats):
 
                 if outcome == (Outcome.ALL, Outcome.NONE):
                     stats.register_solution(program, conf_matrix)
+                    elapsed_time = stats.total_exec_time()
+                    print(f"\n✅ Solution found (ALL, NONE)")
+                    print(f"⏱️  Time to convergence: {elapsed_time:.2f} seconds\n")
                     return stats.solution.code
 
                 stats.register_best_program(program, conf_matrix)
@@ -168,6 +171,9 @@ def popper(settings, stats):
                 solver.add_ground_clauses(rules)
 
     stats.register_completion()
+    elapsed_time = stats.total_exec_time()
+    print(f"\nSearch exhausted")
+    print(f"Total execution time: {elapsed_time:.2f} seconds\n")
     return stats.best_program.code if stats.best_program else None
 
 def show_hspace(settings):
