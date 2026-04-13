@@ -42,6 +42,7 @@ than or equal to the values of `min_fit_clients` and `min_evaluate_clients`.
 """
 logging.basicConfig(level=logging.INFO)
 
+
 OUTCOME_ENCODING = {"all": 1, "some": 2, "none": 3}
 OUTCOME_DECODING = {1: "all", 2: "some", 3: "none"}
 
@@ -83,8 +84,8 @@ def aggregate_outcomes(outcomes):
         # negative
         Eminus = AGG_TABLE_NEG.get((Eminus, em), Eminus)
 
-
     return (Eplus, Eminus)
+
 
 
 class FedPopper(Strategy):
@@ -185,14 +186,17 @@ class FedPopper(Strategy):
                         self.stats.total_programs += 1
 
                     # FEDERATED TEST — envoie hypothèse, attend feedback
-                    outcome, fed_score = self._send_and_wait(program)
-                    
-                    log(INFO, f"outcome={outcome}, score={fed_score}")
 
                     with self._lock:
                         self._current_hyp = program
                         self._current_before = before
                         self._current_min_clause = min_clause
+
+                    outcome, fed_score = self._send_and_wait(program)
+                    
+                    log(INFO, f"outcome={outcome}, score={fed_score}")
+
+                    
 
                     # UPDATE BEST
                     if best_score is None or fed_score > best_score:
